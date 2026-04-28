@@ -1,0 +1,4 @@
+FROM docker.gtjaqh.io/library/node:20.18.0-alpine
+WORKDIR /
+COPY ./web/package.json .
+RUN yarn install --registry=https://mirrors.gtjaqh.io/repository/npm/

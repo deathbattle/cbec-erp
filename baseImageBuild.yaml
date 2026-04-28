@@ -1,0 +1,70 @@
+apiVersion: builds.katanomi.dev/v1alpha1
+kind: Build
+spec:
+  workspaces:
+    - description: |
+        This workspace is shared among all the pipeline tasks to read/write common resources
+      name: source
+  tasks:
+    - name: web-base-image-build
+      timeout: 30m
+      retries: 0
+      taskRef:
+        resolver: katanomi.hub
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: build-image-buildkit
+      workspaces:
+        - name: source
+          workspace: source
+      when: []
+      runAfter: []
+      params:
+        - name: container-images
+          value:
+            - harbor.gtjaqh.io/tradeapi/web-base:latest
+            - harbor.gtjaqh.io/tradeapi/web-base:$(build.git.lastCommit.shortID)
+        - name: format
+          value: oci
+        - name: dockerfile
+          value: ./docker_env/web/DockerfileBuild
+    - name: backend-base-image-build
+      timeout: 30m
+      retries: 0
+      taskRef:
+        resolver: katanomi.hub
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: build-image-buildkit
+      workspaces:
+        - name: source
+          workspace: source
+      when: []
+      params:
+        - name: container-images
+          value:
+            - harbor.gtjaqh.io/tradeapi/backend-base:latest
+            - harbor.gtjaqh.io/tradeapi/backend-baes:$(build.git.lastCommit.shortID)
+        - name: format
+          value: oci
+        - name: dockerfile
+          value: ./docker_env/django/DockerfileBuild
+  git:
+    options:
+      depth: 1
+      timeout: 10m
+      retries: 0
+      resources:
+        limits:
+          cpu: 200m
+          memory: 200Mi
+        requests:
+          cpu: 200m
+          memory: 200Mi
+  runTemplate:
+    spec:
+      taskRunSpecs: []

@@ -1,0 +1,105 @@
+apiVersion: builds.katanomi.dev/v1alpha1
+kind: Build
+spec:
+  workspaces:
+    - name: source
+      description: |
+        This workspace is shared among all the pipeline tasks to read/write common resources
+      optional: false
+  tasks:
+    - name: tradeapi-web
+      timeout: 30m
+      retries: 0
+      taskRef:
+        resolver: katanomi.hub
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: build-image-buildkit
+      workspaces:
+        - name: source
+          workspace: source
+      when: []
+      params:
+        - name: reuse-image
+          value: "true"
+        - name: container-images
+          value:
+            - harbor.gtjaqh.io/tradeapi/web:latest
+            - harbor.gtjaqh.io/tradeapi/web:$(build.git.lastCommit.shortID)
+        - name: format
+          value: oci
+        - name: dockerfile
+          value: ./docker_env/web/Dockerfile
+    - name: tradeapi-backend
+      timeout: 30m
+      retries: 0
+      taskRef:
+        resolver: katanomi.hub
+        params:
+          - name: kind
+            value: task
+          - name: name
+            value: build-image-buildkit
+      workspaces:
+        - name: source
+          workspace: source
+      when: []
+      params:
+        - name: reuse-image
+          value: "true"
+        - name: container-images
+          value:
+            - harbor.gtjaqh.io/tradeapi/backend:latest
+            - harbor.gtjaqh.io/tradeapi/backend:$(build.git.lastCommit.shortID)
+        - name: format
+          value: oci
+        - name: dockerfile
+          value: ./docker_env/django/Dockerfile
+  git:
+    options:
+      depth: 1
+      timeout: 10m
+      retries: 0
+      resources:
+        limits:
+          cpu: 200m
+          memory: 200Mi
+        requests:
+          cpu: 200m
+          memory: 200Mi
+  runTemplate:
+    spec:
+      taskRunSpecs:
+        - pipelineTaskName: tradeapi-web
+          stepOverrides:
+            - name: prepare
+              resources:
+                requests:
+                  memory: 1033Mi
+                limits:
+                  memory: 3100Mi
+            - name: build
+              resources:
+                requests:
+                  memory: 1033Mi
+                limits:
+                  memory: 3100Mi
+            - name: push
+              resources:
+                requests:
+                  memory: 1034Mi
+                limits:
+                  memory: 3100Mi
+      workspaces:
+        - name: source
+          volumeClaimTemplate:
+            spec:
+              storageClassName: stdfs
+              accessModes:
+                - ReadWriteMany
+              resources:
+                requests:
+                  storage: 2Gi
+  params: []
