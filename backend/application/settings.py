@@ -19,7 +19,7 @@ from datetime import timedelta
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ================================================= #
-# ******************** 动态配�?******************** #
+# ******************** 动态配置 ******************** #
 # ================================================= #
 
 from conf.env import *
@@ -60,22 +60,22 @@ INSTALLED_APPS = [
     "drf_yasg",
     "captcha",
     "channels",
-    "server.system",
-    "server.order",
+    "trade_api_server.system",
+    "trade_api_server.order",
 ]
 
 MIDDLEWARE = [
-    "server.utils.middleware.HealthCheckMiddleware",
+    "trade_api_server.utils.middleware.HealthCheckMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",  # 跨域中间�?
+    "corsheaders.middleware.CorsMiddleware",  # 跨域中间件
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "server.utils.middleware.ApiLoggingMiddleware",
+    "trade_api_server.utils.middleware.ApiLoggingMiddleware",
 ]
 
 ROOT_URLCONF = "application.urls"
@@ -153,7 +153,7 @@ USE_TZ = False
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = "/static/"
-# # 设置django的静态文件目�?
+# # 设置django的静态文件目录
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 ]
@@ -161,23 +161,23 @@ STATICFILES_DIRS = [
 MEDIA_ROOT = "media"  # 项目下的目录
 MEDIA_URL = "/media/"  # 跟STATIC_URL类似，指定用户可以通过这个url找到文件
 
-#添加以下代码以后就不用写{% load staticfiles %}，可以直接引�?
+#添加以下代码以后就不用写{% load staticfiles %}，可以直接引用
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
     "django.contrib.staticfiles.finders.AppDirectoriesFinder"
 )
-# 收集静态文件，必须�?MEDIA_ROOT,STATICFILES_DIRS先注�?
+# 收集静态文件，必须将 MEDIA_ROOT,STATICFILES_DIRS先注释
 # python manage.py collectstatic
 # STATIC_ROOT=os.path.join(BASE_DIR,'static')
 
 # ================================================= #
-# ******************* 跨域的配�?******************* #
+# ******************* 跨域的配置 ******************* #
 # ================================================= #
 
 # 全部允许配置
 CORS_ORIGIN_ALLOW_ALL = True
 # 允许cookie
-CORS_ALLOW_CREDENTIALS = True  # 指明在跨域访问中，后端是否支持对cookie的操�?
+CORS_ALLOW_CREDENTIALS = True  # 指明在跨域访问中，后端是否支持对cookie的操作
 
 # ===================================================== #
 # ********************* channels配置 ******************* #
@@ -208,7 +208,7 @@ LOGS_FILE = os.path.join(BASE_DIR, "logs")
 if not os.path.exists(os.path.join(BASE_DIR, "logs")):
     os.makedirs(os.path.join(BASE_DIR, "logs"))
 
-# 格式:[2020-04-22 23:33:01][micoservice.apps.ready():16] [INFO] 这是一条日�?
+# 格式:[2020-04-22 23:33:01][micoservice.apps.ready():16] [INFO] 这是一条日志:
 # 格式:[日期][模块.函数名称():行号] [级别] 信息
 STANDARD_LOG_FORMAT = (
     "[%(asctime)s][%(name)s.%(funcName)s():%(lineno)d] [%(levelname)s] %(message)s"
@@ -236,7 +236,7 @@ LOGGING = {
             "class": "logging.handlers.RotatingFileHandler",
             "filename": SERVER_LOGS_FILE,
             "maxBytes": 1024 * 1024 * 100,  # 100 MB
-            "backupCount": 5,  # 最多备�?�?
+            "backupCount": 5,  # 最多备份5个
             "formatter": "standard",
             "encoding": "utf-8",
         },
@@ -245,7 +245,7 @@ LOGGING = {
             "class": "logging.handlers.RotatingFileHandler",
             "filename": ERROR_LOGS_FILE,
             "maxBytes": 1024 * 1024 * 100,  # 100 MB
-            "backupCount": 3,  # 最多备�?�?
+            "backupCount": 3,  # 最多备份3个
             "formatter": "standard",
             "encoding": "utf-8",
         },
@@ -295,11 +295,11 @@ REST_FRAMEWORK = {
     "DATE_FORMAT": "%Y-%m-%d",
     "DEFAULT_FILTER_BACKENDS": (
         # 'django_filters.rest_framework.DjangoFilterBackend',
-        "server.utils.filters.CustomDjangoFilterBackend",
+        "trade_api_server.utils.filters.CustomDjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ),
-    "DEFAULT_PAGINATION_CLASS": "server.utils.pagination.CustomPagination",  # 自定义分�?
+    "DEFAULT_PAGINATION_CLASS": "trade_api_server.utils.pagination.CustomPagination",  # 自定义分页
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
@@ -307,13 +307,13 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",  # 只有经过身份认证确定用户身份才能访问
     ],
-    "EXCEPTION_HANDLER": "server.utils.exception.CustomExceptionHandler",  # 自定义的异常处理
+    "EXCEPTION_HANDLER": "trade_api_server.utils.exception.CustomExceptionHandler",  # 自定义的异常处理
 }
 # ================================================= #
 # ******************** 登录方式配置 ******************** #
 # ================================================= #
 
-AUTHENTICATION_BACKENDS = ["server.utils.backends.CustomBackend"]
+AUTHENTICATION_BACKENDS = ["trade_api_server.utils.backends.CustomBackend"]
 # ================================================= #
 # ****************** simplejwt配置 ***************** #
 # ================================================= #
@@ -333,7 +333,7 @@ SIMPLE_JWT = {
 SWAGGER_SETTINGS = {
     # 基础样式
     "SECURITY_DEFINITIONS": {"basic": {"type": "basic"}},
-    # 如果需要登录才能够查看接口文档, 登录的链接使用restframework自带�?
+    # 如果需要登录才能够查看接口文档, 登录的链接使用restframework自带的.
     "LOGIN_URL": "apiLogin/",
     # 'LOGIN_URL': 'rest_framework:login',
     "LOGOUT_URL": "rest_framework:logout",
@@ -341,33 +341,33 @@ SWAGGER_SETTINGS = {
     # 'SHOW_REQUEST_HEADERS':True,
     # 'USE_SESSION_AUTH': True,
     # 'DOC_EXPANSION': 'list',
-    # 接口文档中方法列表以首字母升序排�?
+    # 接口文档中方法列表以首字母升序排列
     "APIS_SORTER": "alpha",
-    # 如果支持json提交, 则接口文档中包含json输入�?
+    # 如果支持json提交, 则接口文档中包含json输入框
     "JSON_EDITOR": True,
     # 方法列表字母排序
     "OPERATIONS_SORTER": "alpha",
     "VALIDATOR_URL": None,
-    "AUTO_SCHEMA_TYPE": 2,  # 分组根据url层级分，0�? �?2 �?
-    "DEFAULT_AUTO_SCHEMA_CLASS": "server.utils.swagger.CustomSwaggerAutoSchema",
+    "AUTO_SCHEMA_TYPE": 2,  # 分组根据url层级分，0、1 或 2 层
+    "DEFAULT_AUTO_SCHEMA_CLASS": "trade_api_server.utils.swagger.CustomSwaggerAutoSchema",
 }
 
 # ================================================= #
-# **************** 验证码配�? ******************* #
+# **************** 验证码配置  ******************* #
 # ================================================= #
 CAPTCHA_IMAGE_SIZE = (160, 46)  # 设置 captcha 图片大小
 CAPTCHA_LENGTH = 4  # 字符个数
 CAPTCHA_TIMEOUT = 1  # 超时(minutes)
 CAPTCHA_OUTPUT_FORMAT = "%(image)s %(text_field)s %(hidden_field)s "
 CAPTCHA_FONT_SIZE = 36  # 字体大小
-CAPTCHA_FOREGROUND_COLOR = "#64DAAA"  # 前景�?
-CAPTCHA_BACKGROUND_COLOR = "#F5F7F4"  # 背景�?
+CAPTCHA_FOREGROUND_COLOR = "#64DAAA"  # 前景色
+CAPTCHA_BACKGROUND_COLOR = "#F5F7F4"  # 背景色
 CAPTCHA_NOISE_FUNCTIONS = (
-    "captcha.helpers.noise_arcs",  # �?
-    # "captcha.helpers.noise_dots",  # �?
+    "captcha.helpers.noise_arcs",  # 线
+    # "captcha.helpers.noise_dots",  # 点
 )
-# CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.random_char_challenge' #字母验证�?
-CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.math_challenge"  # 加减乘除验证�?
+# CAPTCHA_CHALLENGE_FUNCT = 'captcha.helpers.random_char_challenge' #字母验证码
+CAPTCHA_CHALLENGE_FUNCT = "captcha.helpers.math_challenge"  # 加减乘除验证码
 
 # ================================================= #
 # ******************** 其他配置 ******************** #
@@ -385,12 +385,12 @@ API_MODEL_MAP = {
 
 DJANGO_CELERY_BEAT_TZ_AWARE = False
 CELERY_TIMEZONE = "Asia/Shanghai"  # celery 时区问题
-# 静态页面压�?
+# 静态页面压缩
 STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
 ALL_MODELS_OBJECTS = []  # 所有app models 对象
 
-# 初始化需要执行的列表，用来初始化后执�?
+# 初始化需要执行的列表，用来初始化后执行
 INITIALIZE_LIST = []
 INITIALIZE_RESET_LIST = []
 # 表前缀
@@ -407,14 +407,14 @@ DICTIONARY_CONFIG = {}
 TENANT_SHARED_APPS = []
 # 插件 urlpatterns
 PLUGINS_URL_PATTERNS = []
-# ********** 一键导入插件配置开�?**********
+# ********** 一键导入插件配置开始 **********
 # 例如:
 # from trade-api-server_upgrade_center.settings import *    # 升级中心
 # from trade-api-server_celery.settings import *            # celery 异步任务
-# from trade-api-server_third.settings import *            # 第三方用户管�?
+# from trade-api-server_third.settings import *            # 第三方用户管理
 # from trade-api-server_ak_sk.settings import *            # 秘钥管理管理
 # from trade-api-server_tenants.settings import *            # 租户管理
 #from trade-api-server_social_auth.settings import *
 #from trade-api-server_uniapp.settings import *
 # ...
-# ********** 一键导入插件配置结�?**********
+# ********** 一键导入插件配置结束 **********

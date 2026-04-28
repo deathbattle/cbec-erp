@@ -11,9 +11,9 @@ from jwt import InvalidSignatureError
 from rest_framework.request import Request
 
 from application import settings
-from server.system.models import MessageCenter, Users, MessageCenterTargetUser
-from server.system.views.message_center import MessageCenterTargetUserSerializer
-from server.utils.serializers import CustomModelSerializer
+from trade_api_server.system.models import MessageCenter, Users, MessageCenterTargetUser
+from trade_api_server.system.views.message_center import MessageCenterTargetUserSerializer
+from trade_api_server.utils.serializers import CustomModelSerializer
 
 send_dict = {}
 
@@ -29,9 +29,10 @@ def set_message(sender, msg_type, msg, unread=0):
     return text
 
 
-# 异步获取消息中心的目标用�?@database_sync_to_async
+# 异步获取消息中心的目标用户
+@database_sync_to_async
 def _get_message_center_instance(message_id):
-    from server.system.models import MessageCenter
+    from trade_api_server.system.models import MessageCenter
     _MessageCenter = MessageCenter.objects.filter(id=message_id).values_list('target_user', flat=True)
     if _MessageCenter:
         return _MessageCenter
@@ -41,8 +42,8 @@ def _get_message_center_instance(message_id):
 
 @database_sync_to_async
 def _get_message_unread(user_id):
-    """获取用户的未读消息数�?""
-    from server.system.models import MessageCenterTargetUser
+    """获取用户的未读消息数量"""
+    from trade_api_server.system.models import MessageCenterTargetUser
     count = MessageCenterTargetUser.objects.filter(users=user_id, is_read=False).count()
     return count or 0
 
@@ -68,9 +69,11 @@ class DvadminWebSocket(AsyncJsonWebsocketConsumer):
                     self.channel_name
                 )
                 await self.accept()
-                # 主动推送消�?                unread_count = await _get_message_unread(self.user_id)
+                # 主动推送消息
+                unread_count = await _get_message_unread(self.user_id)
                 if unread_count == 0:
-                    # 发送连接成�?                    await self.send_json(set_message('system', 'SYSTEM', '您已上线'))
+                    # 发送连接成功
+                    await self.send_json(set_message('system', 'SYSTEM', '您已上线'))
                 else:
                     await self.send_json(
                         set_message('system', 'SYSTEM', "请查看您的未读消息~",
@@ -94,7 +97,8 @@ class MegCenter(DvadminWebSocket):
     """
 
     async def receive(self, text_data):
-        # 接受客户端的信息，你处理的函�?        text_data_json = json.loads(text_data)
+        # 接受客户端的信息，你处理的函数
+        text_data_json = json.loads(text_data)
         message_id = text_data_json.get('message_id', None)
         user_list = await _get_message_center_instance(message_id)
         for send_user in user_list:
@@ -104,7 +108,7 @@ class MegCenter(DvadminWebSocket):
             )
 
     async def push_message(self, event):
-        """消息发�?""
+        """消息发送"""
         message = event['json']
         await self.send(text_data=json.dumps(message))
 
@@ -151,8 +155,10 @@ def create_message_push(title: str, content: str, target_type: int = 0, target_u
     message_center_instance.is_valid(raise_exception=True)
     message_center_instance.save()
     users = target_user or []
-    if target_type in [1]:  # 按角�?        users = Users.objects.filter(role__id__in=target_role).values_list('id', flat=True)
-    if target_type in [2]:  # 按部�?        users = Users.objects.filter(dept__id__in=target_dept).values_list('id', flat=True)
+    if target_type in [1]:  # 按角色
+        users = Users.objects.filter(role__id__in=target_role).values_list('id', flat=True)
+    if target_type in [2]:  # 按部门
+        users = Users.objects.filter(dept__id__in=target_dept).values_list('id', flat=True)
     if target_type in [3]:  # 系统通知
         users = Users.objects.values_list('id', flat=True)
     targetuser_data = []

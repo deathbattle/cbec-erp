@@ -22,7 +22,8 @@ platforms.C_FORCE_ROOT = True
 
 def retry_base_task_error():
     """
-    celery 失败重试装饰�?    :return:
+    celery 失败重试装饰器
+    :return:
     """
 
     def wraps(func):

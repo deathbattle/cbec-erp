@@ -24,21 +24,21 @@ from rest_framework_simplejwt.views import (
 
 from application import dispatch
 from application import settings
-from server.system.views.dictionary import InitDictionaryViewSet
-from server.system.views.login import (
+from trade_api_server.system.views.dictionary import InitDictionaryViewSet
+from trade_api_server.system.views.login import (
     LoginView,
     CaptchaView,
     ApiLogin,
     LogoutView,
     LoginTokenView
 )
-from server.system.views.system_config import InitSettingsViewSet
-from server.utils.swagger import CustomOpenAPISchemaGenerator
+from trade_api_server.system.views.system_config import InitSettingsViewSet
+from trade_api_server.utils.swagger import CustomOpenAPISchemaGenerator
 
-# =========== 初始化系统配�?=================
+# =========== 初始化系统配置 =================
 dispatch.init_system_config()
 dispatch.init_dictionary()
-# =========== 初始化系统配�?=================
+# =========== 初始化系统配置 =================
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -68,14 +68,14 @@ def serve_web_files(request, filename):
     # 设定文件路径
     filepath = os.path.join(settings.BASE_DIR, 'templates', 'web', filename)
 
-    # 检查文件是否存�?
+    # 检查文件是否存在
     if not os.path.exists(filepath):
         raise Http404("File does not exist")
 
     # 根据文件扩展名，确定 MIME 类型
     mime_type, _ = mimetypes.guess_type(filepath)
 
-    # 打开文件并读取内�?
+    # 打开文件并读取内容
     with open(filepath, 'rb') as f:
         response = HttpResponse(f.read(), content_type=mime_type)
         return response
@@ -98,9 +98,9 @@ urlpatterns = (
                 schema_view.with_ui("redoc", cache_timeout=0),
                 name="schema-redoc",
             ),
-            path("api/system/", include("server.system.urls")),
-            path("api/trade/", include("server.trade.urls")),
-            path("api/order/", include("server.order.urls")),
+            path("api/system/", include("trade_api_server.system.urls")),
+            path("api/trade/", include("trade_api_server.trade.urls")),
+            path("api/order/", include("trade_api_server.order.urls")),
             path("api/login/", LoginView.as_view(), name="token_obtain_pair"),
             path("api/logout/", LogoutView.as_view(), name="token_obtain_pair"),
             path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

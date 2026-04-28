@@ -16,7 +16,7 @@ def is_tenants_mode():
 # ******************** 初始化 ******************** #
 # ================================================= #
 def _get_all_dictionary():
-    from server.system.models import Dictionary
+    from trade_api_server.system.models import Dictionary
 
     queryset = Dictionary.objects.filter(status=True, is_value=False)
     data = []
@@ -37,7 +37,7 @@ def _get_all_dictionary():
 
 def _get_all_system_config():
     data = {}
-    from server.system.models import SystemConfig
+    from trade_api_server.system.models import SystemConfig
 
     system_config_obj = (
         SystemConfig.objects.filter(parent_id__isnull=False)
@@ -77,7 +77,7 @@ def init_dictionary():
         else:
             settings.DICTIONARY_CONFIG = _get_all_dictionary()
     except Exception as e:
-        print("请先进行数据库迁移")
+        print("请先进行数据库迁移!")
     return
 
 
@@ -98,7 +98,7 @@ def init_system_config():
         else:
             settings.SYSTEM_CONFIG = _get_all_system_config()
     except Exception as e:
-        print("请先进行数据库迁移")
+        print("请先进行数据库迁移!")
     return
 
 
