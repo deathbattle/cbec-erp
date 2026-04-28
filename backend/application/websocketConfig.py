@@ -11,9 +11,9 @@ from jwt import InvalidSignatureError
 from rest_framework.request import Request
 
 from application import settings
-from trade_api_server.system.models import MessageCenter, Users, MessageCenterTargetUser
-from trade_api_server.system.views.message_center import MessageCenterTargetUserSerializer
-from trade_api_server.utils.serializers import CustomModelSerializer
+from server.system.models import MessageCenter, Users, MessageCenterTargetUser
+from server.system.views.message_center import MessageCenterTargetUserSerializer
+from server.utils.serializers import CustomModelSerializer
 
 send_dict = {}
 
@@ -32,7 +32,7 @@ def set_message(sender, msg_type, msg, unread=0):
 # 异步获取消息中心的目标用户
 @database_sync_to_async
 def _get_message_center_instance(message_id):
-    from trade_api_server.system.models import MessageCenter
+    from server.system.models import MessageCenter
     _MessageCenter = MessageCenter.objects.filter(id=message_id).values_list('target_user', flat=True)
     if _MessageCenter:
         return _MessageCenter
@@ -43,7 +43,7 @@ def _get_message_center_instance(message_id):
 @database_sync_to_async
 def _get_message_unread(user_id):
     """获取用户的未读消息数量"""
-    from trade_api_server.system.models import MessageCenterTargetUser
+    from server.system.models import MessageCenterTargetUser
     count = MessageCenterTargetUser.objects.filter(users=user_id, is_read=False).count()
     return count or 0
 

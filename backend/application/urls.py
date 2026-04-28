@@ -24,16 +24,16 @@ from rest_framework_simplejwt.views import (
 
 from application import dispatch
 from application import settings
-from trade_api_server.system.views.dictionary import InitDictionaryViewSet
-from trade_api_server.system.views.login import (
+from server.system.views.dictionary import InitDictionaryViewSet
+from server.system.views.login import (
     LoginView,
     CaptchaView,
     ApiLogin,
     LogoutView,
     LoginTokenView
 )
-from trade_api_server.system.views.system_config import InitSettingsViewSet
-from trade_api_server.utils.swagger import CustomOpenAPISchemaGenerator
+from server.system.views.system_config import InitSettingsViewSet
+from server.utils.swagger import CustomOpenAPISchemaGenerator
 
 # =========== 初始化系统配置 =================
 dispatch.init_system_config()
@@ -98,9 +98,9 @@ urlpatterns = (
                 schema_view.with_ui("redoc", cache_timeout=0),
                 name="schema-redoc",
             ),
-            path("api/system/", include("trade_api_server.system.urls")),
-            path("api/trade/", include("trade_api_server.trade.urls")),
-            path("api/order/", include("trade_api_server.order.urls")),
+            path("api/system/", include("server.system.urls")),
+            path("api/trade/", include("server.trade.urls")),
+            path("api/order/", include("server.order.urls")),
             path("api/login/", LoginView.as_view(), name="token_obtain_pair"),
             path("api/logout/", LogoutView.as_view(), name="token_obtain_pair"),
             path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

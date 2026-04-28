@@ -60,12 +60,12 @@ INSTALLED_APPS = [
     "drf_yasg",
     "captcha",
     "channels",
-    "trade_api_server.system",
-    "trade_api_server.order",
+    "server.system",
+    "server.order",
 ]
 
 MIDDLEWARE = [
-    "trade_api_server.utils.middleware.HealthCheckMiddleware",
+    "server.utils.middleware.HealthCheckMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -75,7 +75,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "trade_api_server.utils.middleware.ApiLoggingMiddleware",
+    "server.utils.middleware.ApiLoggingMiddleware",
 ]
 
 ROOT_URLCONF = "application.urls"
@@ -295,11 +295,11 @@ REST_FRAMEWORK = {
     "DATE_FORMAT": "%Y-%m-%d",
     "DEFAULT_FILTER_BACKENDS": (
         # 'django_filters.rest_framework.DjangoFilterBackend',
-        "trade_api_server.utils.filters.CustomDjangoFilterBackend",
+        "server.utils.filters.CustomDjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ),
-    "DEFAULT_PAGINATION_CLASS": "trade_api_server.utils.pagination.CustomPagination",  # 自定义分页
+    "DEFAULT_PAGINATION_CLASS": "server.utils.pagination.CustomPagination",  # 自定义分页
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
@@ -307,13 +307,13 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",  # 只有经过身份认证确定用户身份才能访问
     ],
-    "EXCEPTION_HANDLER": "trade_api_server.utils.exception.CustomExceptionHandler",  # 自定义的异常处理
+    "EXCEPTION_HANDLER": "server.utils.exception.CustomExceptionHandler",  # 自定义的异常处理
 }
 # ================================================= #
 # ******************** 登录方式配置 ******************** #
 # ================================================= #
 
-AUTHENTICATION_BACKENDS = ["trade_api_server.utils.backends.CustomBackend"]
+AUTHENTICATION_BACKENDS = ["server.utils.backends.CustomBackend"]
 # ================================================= #
 # ****************** simplejwt配置 ***************** #
 # ================================================= #
@@ -349,7 +349,7 @@ SWAGGER_SETTINGS = {
     "OPERATIONS_SORTER": "alpha",
     "VALIDATOR_URL": None,
     "AUTO_SCHEMA_TYPE": 2,  # 分组根据url层级分，0、1 或 2 层
-    "DEFAULT_AUTO_SCHEMA_CLASS": "trade_api_server.utils.swagger.CustomSwaggerAutoSchema",
+    "DEFAULT_AUTO_SCHEMA_CLASS": "server.utils.swagger.CustomSwaggerAutoSchema",
 }
 
 # ================================================= #

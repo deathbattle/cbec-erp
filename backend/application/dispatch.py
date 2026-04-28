@@ -16,7 +16,7 @@ def is_tenants_mode():
 # ******************** 初始化 ******************** #
 # ================================================= #
 def _get_all_dictionary():
-    from trade_api_server.system.models import Dictionary
+    from server.system.models import Dictionary
 
     queryset = Dictionary.objects.filter(status=True, is_value=False)
     data = []
@@ -37,7 +37,7 @@ def _get_all_dictionary():
 
 def _get_all_system_config():
     data = {}
-    from trade_api_server.system.models import SystemConfig
+    from server.system.models import SystemConfig
 
     system_config_obj = (
         SystemConfig.objects.filter(parent_id__isnull=False)

@@ -12,7 +12,7 @@ from application.settings import BASE_DIR
 
 # 使用mysql时，改为此配置
 DATABASE_ENGINE = "django.db.backends.mysql"
-DATABASE_NAME = 'db_trade_api_server' # mysql 时使用
+DATABASE_NAME = 'db_server' # mysql 时使用
 
 # 数据库地址 改为自己数据库地址
 DATABASE_HOST = '10.76.148.27'
