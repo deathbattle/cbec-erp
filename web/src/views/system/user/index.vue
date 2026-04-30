@@ -13,7 +13,7 @@
           </p>
           <el-input v-model="filterText" :placeholder="placeholder"/>
           <el-tree ref="treeRef" class="font-mono font-bold leading-6 text-7xl" :data="data" :props="treeProps"
-                   :filter-node-method="filterNode" icon="ArrowRightBold" :indent="38" highlight-current @node-click="onTreeNodeClick">
+                   :filter-node-method='filterNode as any' icon="ArrowRightBold" :indent="38" highlight-current @node-click="onTreeNodeClick">
             <template #default="{ node, data }">
               <element-tree-line :node="node" :showLabelLine="false" :indent="32">
 					<span v-if="data.status" class="text-center font-black font-normal">
@@ -123,7 +123,7 @@ const crudBinding = ref();
 // 暴露的方法
 const {crudExpose} = useExpose({crudRef, crudBinding});
 // 你的crud配置
-const {crudOptions} = createCrudOptions({crudExpose});
+const {crudOptions} = createCrudOptions({crudExpose, context: {}});
 // 初始化crud配置
 const {resetCrudOptions} = useCrud({crudExpose, crudOptions});
 

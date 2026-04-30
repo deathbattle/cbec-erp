@@ -1,4 +1,4 @@
-﻿from django.urls import path
+from django.urls import path
 from rest_framework import routers
 from server.order.views import TiktokOrderViewSet, ShangmaOrderViewSet, OrderStatisticsViewSet
 
@@ -9,9 +9,9 @@ order_url.register(r'statistics', OrderStatisticsViewSet, basename='statistics')
 
 urlpatterns = [
     path('tiktok/export/', TiktokOrderViewSet.as_view({'post': 'export_data', })),
-    path('tiktok/import/', TiktokOrderViewSet.as_view({'get': 'import_data', 'post': 'import_data'})),
+    path('tiktok/import_data/', TiktokOrderViewSet.as_view({'get': 'import_data', 'post': 'import_data'})),
     path('shangma/export/', ShangmaOrderViewSet.as_view({'post': 'export_data', })),
-    path('shangma/import/', ShangmaOrderViewSet.as_view({'get': 'import_data', 'post': 'import_data'})),
+    path('shangma/import_data/', ShangmaOrderViewSet.as_view({'get': 'import_data', 'post': 'import_data'})),
     path('tiktok/statistics/', OrderStatisticsViewSet.as_view({'get': 'tiktok_statistics'})),
     path('shangma/statistics/', OrderStatisticsViewSet.as_view({'get': 'shangma_statistics'})),
     path('trend/', OrderStatisticsViewSet.as_view({'get': 'trend'})),

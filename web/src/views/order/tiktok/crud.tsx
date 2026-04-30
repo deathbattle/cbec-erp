@@ -9,6 +9,7 @@ import {
     CreateCrudOptionsRet
 } from '@fast-crud/fast-crud';
 import { auth } from '/@/utils/authFunction';
+import { commonCrudConfig } from "/@/utils/commonCrud";
 
 export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProps): CreateCrudOptionsRet {
     const pageRequest = async (query: UserPageQuery) => {
@@ -45,12 +46,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
             actionbar: {
                 buttons: {
                     add: {
-                        show: auth('tiktok:Create')
+                        show: auth('tiktok_order:Create')
                     },
                     export: {
                         text: "导出",
                         title: "导出",
-                        show: auth('tiktok:Export'),
+                        show: auth('tiktok_order:Export'),
                         click() {
                             return exportRequest(crudExpose!.getSearchFormData())
                         }
@@ -67,20 +68,20 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
             },
             rowHandle: {
                 fixed: 'right',
-                width: 180,
+                width: 200,
                 buttons: {
                     view: {
-                        show: true,
+                        show: false,
                     },
                     edit: {
                         iconRight: 'Edit',
                         type: 'text',
-                        show: auth('tiktok:Update'),
+                        show: auth('tiktok_order:Update'),
                     },
                     remove: {
                         iconRight: 'Delete',
                         type: 'text',
-                        show: auth('tiktok:Delete'),
+                        show: auth('tiktok_order:Delete'),
                     },
                 },
             },
@@ -103,6 +104,7 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 120,
+                        align: 'center',
                     },
                     form: {
                         rules: [
@@ -111,6 +113,9 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                                 message: '订单ID必填',
                             },
                         ],
+                        component: {
+                            placeholder: '请输入订单ID',
+                        },
                     },
                 },
                 product_id: {
@@ -121,6 +126,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 120,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入商品ID',
+                        },
                     },
                 },
                 product_name: {
@@ -131,10 +142,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 150,
+                        align: 'center',
                     },
                     form: {
                         component: {
                             type: 'textarea',
+                            placeholder: '请输入商品名称',
                         },
                     },
                 },
@@ -146,6 +159,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 120,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入SKU ID',
+                        },
                     },
                 },
                 product_price: {
@@ -153,6 +172,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'number',
                     column: {
                         minWidth: 100,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入商品价格',
+                        },
                     },
                 },
                 payment_amount: {
@@ -160,6 +185,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'number',
                     column: {
                         minWidth: 100,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入支付金额',
+                        },
                     },
                 },
                 currency_unit: {
@@ -170,6 +201,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 100,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入货币单位',
+                        },
                     },
                 },
                 order_quantity: {
@@ -177,11 +214,20 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'number',
                     column: {
                         minWidth: 100,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入下单件数',
+                        },
                     },
                 },
                 is_refunded: {
                     title: '已退款',
-                    type: 'dict-switch',
+                    search: {
+                        show: true,
+                    },
+                    type: 'dict-select',
                     dict: dict({
                         data: [
                             { label: '是', value: true },
@@ -190,6 +236,7 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     }),
                     column: {
                         minWidth: 80,
+                        align: 'center',
                     },
                 },
                 payment_method: {
@@ -200,6 +247,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 100,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入付款方式',
+                        },
                     },
                 },
                 order_status: {
@@ -210,6 +263,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 100,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入订单状态',
+                        },
                     },
                 },
                 influencer_username: {
@@ -220,6 +279,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 120,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入达人用户名',
+                        },
                     },
                 },
                 content_type: {
@@ -230,6 +295,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 100,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入内容形式',
+                        },
                     },
                 },
                 content_id: {
@@ -237,6 +308,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 120,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入内容ID',
+                        },
                     },
                 },
                 commission_model: {
@@ -244,6 +321,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 100,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入佣金模型',
+                        },
                     },
                 },
                 standard_commission_rate: {
@@ -251,6 +334,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'number',
                     column: {
                         minWidth: 100,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入标准佣金率',
+                        },
                     },
                 },
                 estimated_commission_amount: {
@@ -258,6 +347,7 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'number',
                     column: {
                         minWidth: 120,
+                        align: 'center',
                     },
                 },
                 estimated_standard_commission: {
@@ -265,6 +355,7 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'number',
                     column: {
                         minWidth: 120,
+                        align: 'center',
                     },
                 },
                 actual_commission_amount: {
@@ -272,6 +363,7 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'number',
                     column: {
                         minWidth: 120,
+                        align: 'center',
                     },
                 },
                 actual_commission: {
@@ -279,6 +371,7 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'number',
                     column: {
                         minWidth: 100,
+                        align: 'center',
                     },
                 },
                 store_ad_commission_rate: {
@@ -286,6 +379,7 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'number',
                     column: {
                         minWidth: 120,
+                        align: 'center',
                     },
                 },
                 create_time: {
@@ -293,6 +387,7 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'datetime',
                     column: {
                         minWidth: 150,
+                        align: 'center',
                     },
                 },
                 payment_time: {
@@ -300,6 +395,7 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'datetime',
                     column: {
                         minWidth: 150,
+                        align: 'center',
                     },
                 },
                 delivery_time: {
@@ -307,6 +403,7 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'datetime',
                     column: {
                         minWidth: 150,
+                        align: 'center',
                     },
                 },
                 platform: {
@@ -317,8 +414,20 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     type: 'input',
                     column: {
                         minWidth: 80,
+                        align: 'center',
+                    },
+                    form: {
+                        component: {
+                            placeholder: '请输入平台',
+                        },
                     },
                 },
+                ...commonCrudConfig({
+                    dept_belong_id: {
+                        form: true,
+                        table: true
+                    }
+                })
             },
         },
     };

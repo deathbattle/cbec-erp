@@ -1,9 +1,9 @@
 <template>
   <fs-page>
-    <el-card>
+    <el-card :body-style="{ height: '100%' }">
       <fs-crud ref="crudRef" v-bind="crudBinding">
         <template #actionbar-right>
-          <importExcel api="api/order/shangma/" v-auth="'shangma:Import'">导入</importExcel>
+          <importExcel api="api/order/shangma/" v-auth="'shangma_order:Import'">导入</importExcel>
         </template>
       </fs-crud>
     </el-card>
@@ -14,14 +14,13 @@
 import { useExpose, useCrud } from '@fast-crud/fast-crud';
 import { createCrudOptions } from './crud';
 import importExcel from '/@/components/importExcel/index.vue';
+import { ref, onMounted } from 'vue';
 
 const crudRef = ref();
 const crudBinding = ref();
 const { crudExpose } = useExpose({ crudRef, crudBinding });
-const { crudOptions } = createCrudOptions({ crudExpose });
+const { crudOptions } = createCrudOptions({ crudExpose, context: {} });
 const { resetCrudOptions } = useCrud({ crudExpose, crudOptions });
-
-import { ref, onMounted } from 'vue';
 
 onMounted(() => {
   crudExpose.doRefresh();

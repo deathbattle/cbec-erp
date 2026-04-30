@@ -3,5 +3,75 @@
         "role__key": "admin",
         "menu_button__value": "menu:Search",
         "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "tiktok_order:Search",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "tiktok_order:Retrieve",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "tiktok_order:Create",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "tiktok_order:Update",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "tiktok_order:Delete",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "tiktok_order:Export",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "tiktok_order:Import",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "shangma_order:Search",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "shangma_order:Retrieve",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "shangma_order:Create",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "shangma_order:Update",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "shangma_order:Delete",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "shangma_order:Export",
+        "data_range": 0
+    },
+    {
+        "role__key": "admin",
+        "menu_button__value": "shangma_order:Import",
+        "data_range": 0
     }
 ]

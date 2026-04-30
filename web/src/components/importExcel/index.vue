@@ -126,7 +126,7 @@ const handleFileSuccess=function (response:any, file:any, fileList:any) {
     ElMessageBox.alert('导入成功', '导入完成', {
       confirmButtonText: 'OK',
       callback: (action: Action) => {
-        refreshView()
+        (refreshView as () => void)()
       },
     })
   }).catch(()=>{

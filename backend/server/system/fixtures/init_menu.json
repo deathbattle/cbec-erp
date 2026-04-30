@@ -1399,5 +1399,73 @@
         ],
         "menu_button": [],
         "menu_field": []
+    },
+    {
+        "name": "订单管理",
+        "icon": "iconfont icon-order",
+        "sort": 4,
+        "is_link": false,
+        "is_catalog": true,
+        "web_path": "/order",
+        "component": "",
+        "component_name": "",
+        "status": true,
+        "cache": false,
+        "visible": true,
+        "parent": null,
+        "children": [
+            {
+                "name": "TikTok订单",
+                "icon": "ele-Shop",
+                "sort": 1,
+                "is_link": false,
+                "is_catalog": false,
+                "web_path": "/tiktok",
+                "component": "order/tiktok/index",
+                "component_name": "tiktok",
+                "status": true,
+                "cache": false,
+                "visible": true,
+                "parent": 20,
+                "children": [],
+                "menu_button": [
+                    {"name": "查询", "value": "tiktok_order:Search", "api": "/api/order/tiktok/", "method": 0},
+                    {"name": "详情", "value": "tiktok_order:Retrieve", "api": "/api/order/tiktok/{id}/", "method": 0},
+                    {"name": "新增", "value": "tiktok_order:Create", "api": "/api/order/tiktok/", "method": 1},
+                    {"name": "编辑", "value": "tiktok_order:Update", "api": "/api/order/tiktok/{id}/", "method": 2},
+                    {"name": "删除", "value": "tiktok_order:Delete", "api": "/api/order/tiktok/{id}/", "method": 3},
+                    {"name": "导出", "value": "tiktok_order:Export", "api": "/api/order/tiktok/export_data/", "method": 0},
+                    {"name": "导入", "value": "tiktok_order:Import", "api": "/api/order/tiktok/import_data/", "method": 1}
+                ],
+                "menu_field": []
+            },
+            {
+                "name": "上马订单",
+                "icon": "ele-ShoppingCart",
+                "sort": 2,
+                "is_link": false,
+                "is_catalog": false,
+                "web_path": "/shangma",
+                "component": "order/shangma/index",
+                "component_name": "shangma",
+                "status": true,
+                "cache": false,
+                "visible": true,
+                "parent": 20,
+                "children": [],
+                "menu_button": [
+                    {"name": "查询", "value": "shangma_order:Search", "api": "/api/order/shangma/", "method": 0},
+                    {"name": "详情", "value": "shangma_order:Retrieve", "api": "/api/order/shangma/{id}/", "method": 0},
+                    {"name": "新增", "value": "shangma_order:Create", "api": "/api/order/shangma/", "method": 1},
+                    {"name": "编辑", "value": "shangma_order:Update", "api": "/api/order/shangma/{id}/", "method": 2},
+                    {"name": "删除", "value": "shangma_order:Delete", "api": "/api/order/shangma/{id}/", "method": 3},
+                    {"name": "导出", "value": "shangma_order:Export", "api": "/api/order/shangma/export_data/", "method": 0},
+                    {"name": "导入", "value": "shangma_order:Import", "api": "/api/order/shangma/import_data/", "method": 1}
+                ],
+                "menu_field": []
+            }
+        ],
+        "menu_button": [],
+        "menu_field": []
     }
 ]
