@@ -37,52 +37,56 @@
               clearable
           ></el-input>
 
-          <el-input-number :key="index + 1" v-else-if="item.form_item_type_label === 'number'" v-model="formData[item.key]" :min="0"></el-input-number>
+          <el-input-number :key="String(index) + '1'" v-else-if="item.form_item_type_label === 'number'" v-model="formData[item.key]" :min="0"></el-input-number>
           <!--     datetime、date、time     -->
           <el-date-picker
               v-else-if="['datetime', 'date', 'time'].indexOf(item.form_item_type_label) > -1"
               v-model="formData[item.key]"
-              :key="index + 2"
+              :key="String(index) + '2'"
               :type="item.form_item_type_label"
               :placeholder="item.placeholder"
           >
           </el-date-picker>
           <!--    select      -->
           <el-select
-              :key="index + 3"
+              :key="String(index) + '3'"
               v-else-if="item.form_item_type_label === 'select'"
               v-model="formData[item.key]"
               :placeholder="item.placeholder"
               clearable
           >
-            <el-option v-for="item in dictionary(item.setting) || []" :key="item.value" :label="item.label" :value="item.value"> </el-option>
+            <el-option v-for="optionItem in dictionary(item.setting) || []" :key="optionItem.value" :label="optionItem.label" :value="optionItem.value"> </el-option>
           </el-select>
           <!--    checkbox      -->
           <el-checkbox-group
-              :key="index + 4"
+              :key="String(index) + '4'"
               v-else-if="item.form_item_type_label === 'checkbox'"
               v-model="formData[item.key]"
               :placeholder="item.placeholder"
           >
-            <el-checkbox v-for="item in dictionary(item.setting) || []" :key="item.value" :label="item.value" :value="item.value">
+            <el-checkbox v-for="checkboxItem in dictionary(item.setting) || []" :key="checkboxItem.value" :label="checkboxItem.value" :value="checkboxItem.value">
+              {{ checkboxItem.label }}
+            </el-checkbox>
               {{ item.label }}
             </el-checkbox>
           </el-checkbox-group>
           <!--    radio      -->
           <el-radio-group
-              :key="index + 5"
+              :key="String(index) + '5'"
               v-else-if="item.form_item_type_label === 'radio'"
               v-model="formData[item.key]"
               :placeholder="item.placeholder"
               clearable
           >
-            <el-radio v-for="item in dictionary(item.setting) || []" :key="item.value" :label="item.value" :value="item.value">
+            <el-radio v-for="radioItem in dictionary(item.setting) || []" :key="radioItem.value" :label="radioItem.value" :value="radioItem.value">
+              {{ radioItem.label }}
+            </el-radio>
               {{ item.label }}
             </el-radio>
           </el-radio-group>
           <!--    switch      -->
           <el-switch
-              :key="index + 6"
+              :key="String(index) + '6'"
               v-else-if="item.form_item_type_label === 'switch'"
               v-model="formData[item.key]"
               :inactive-value="false"
@@ -91,7 +95,7 @@
           >
           </el-switch>
           <!--     图片     -->
-          <div v-else-if="['img', 'imgs'].indexOf(item.form_item_type_label) > -1" :key="index + 7">
+          <div v-else-if="['img', 'imgs'].indexOf(item.form_item_type_label) > -1" :key="String(index) + '7'">
             <el-upload
                 :action="uploadUrl"
                 :headers="uploadHeaders"
@@ -125,7 +129,7 @@
             </el-dialog>
           </div>
           <!--     文件     -->
-          <div v-else-if="['file'].indexOf(item.form_item_type_label) > -1" :key="index + 8">
+          <div v-else-if="['file'].indexOf(item.form_item_type_label) > -1" :key="String(index) + '8'">
             <el-upload
                 :action="uploadUrl"
                 :headers="uploadHeaders"
@@ -157,7 +161,7 @@
             </el-dialog>
           </div>
           <!--    关联表      -->
-          <div v-else-if="['foreignkey', 'manytomany'].indexOf(item.form_item_type_label) > -1" :key="index + 9">
+          <div v-else-if="['foreignkey', 'manytomany'].indexOf(item.form_item_type_label) > -1" :key="String(index) + '9'">
             <table-selector
                 v-model="formData[item.key]"
                 :el-props="{
@@ -174,7 +178,7 @@
             ></table-selector>
           </div>
           <!--   数组       -->
-          <div v-else-if="item.form_item_type_label === 'array'" :key="index + 10">
+          <div v-else-if="item.form_item_type_label === 'array'" :key="String(index) + '10'">
             <vxe-table
                 border
                 resizable

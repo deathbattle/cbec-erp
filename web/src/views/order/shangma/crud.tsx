@@ -56,14 +56,14 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                             return exportRequest(crudExpose!.getSearchFormData())
                         }
                     },
-                    clear: {
-                        text: "清空筛选",
-                        title: "清空筛选",
-                        show: true,
-                        click() {
-                            crudExpose!.doSearch({ form: {} })
-                        }
-                    }
+                    // clear: {
+                    //     text: "清空筛选",
+                    //     title: "清空筛选",
+                    //     show: true,
+                    //     click() {
+                    //         crudExpose!.doSearch({ form: {} })
+                    //     }
+                    // }
                 }
             },
             rowHandle: {

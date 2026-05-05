@@ -13,6 +13,7 @@ import { commonCrudConfig } from "/@/utils/commonCrud";
 
 export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProps): CreateCrudOptionsRet {
     const pageRequest = async (query: UserPageQuery) => {
+        // 直接返回api调用结果，fast-crud会通过全局配置的transformRes自动转换格式
         return await api.GetList(query);
     };
     const editRequest = async ({ form, row }: EditReq) => {
@@ -32,16 +33,35 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
 
     return {
         crudOptions: {
-            table: {
-                remove: {
-                    confirmMessage: '是否删除该订单？',
-                },
-            },
             request: {
                 pageRequest,
                 addRequest,
                 editRequest,
                 delRequest,
+            },
+            // hooks: {
+            //     beforePageQuery: (ctx: any) => {
+            //         console.log('beforePageQuery 执行了');
+            //         return ctx;
+            //     },
+            //     afterPageQuery:(ctx: any) => {
+            //         // 请求成功了，处理数据
+            //         debugger
+            //         console.log('查询成功，数据为：', ctx.res.records)
+            //         return ctx
+            //     }
+            // },
+            table: {
+                remove: {
+                    confirmMessage: '是否删除该订单？',
+                },
+                onRefreshed: {
+                    // 列表刷新回调
+                    querySuccess: (data: any) => {
+                        debugger
+                        console.log('列表刷新回调', data);
+                    },
+                },
             },
             actionbar: {
                 buttons: {
@@ -68,19 +88,19 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
             },
             rowHandle: {
                 fixed: 'right',
-                width: 200,
+                width: 250,
                 buttons: {
                     view: {
                         show: false,
                     },
                     edit: {
                         iconRight: 'Edit',
-                        type: 'text',
+                        link: true,
                         show: auth('tiktok_order:Update'),
                     },
                     remove: {
                         iconRight: 'Delete',
-                        type: 'text',
+                        link: true,
                         show: auth('tiktok_order:Delete'),
                     },
                 },
@@ -146,7 +166,7 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                     },
                     form: {
                         component: {
-                            type: 'textarea',
+                            // type: 'textarea',
                             placeholder: '请输入商品名称',
                         },
                     },

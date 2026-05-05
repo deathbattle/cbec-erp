@@ -26,3 +26,21 @@ onMounted(() => {
   crudExpose.doRefresh();
 });
 </script>
+
+<style lang="scss" scoped>
+.el-row {
+  height: 100%;
+
+  .el-col {
+    height: 100%;
+  }
+}
+
+.el-card {
+  height: 100%;
+}
+
+.font-normal {
+  font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, SimSun, sans-serif;
+}
+</style>

@@ -321,7 +321,7 @@ export const createCrudOptions = function ({ crudExpose, context }: CreateCrudOp
 					title: '性别',
 					type: 'dict-select',
 					dict: dict({
-						data: dictionary('gender'),
+						data: dictionary('gender', undefined),
 					}),
 					form: {
 						value: 1,
@@ -338,7 +338,7 @@ export const createCrudOptions = function ({ crudExpose, context }: CreateCrudOp
 					},
 					type: 'dict-select',
 					dict: dict({
-						data: dictionary('user_type'),
+						data: dictionary('user_type', undefined),
 					}),
 					column: {
 						minWidth: 100, //最小列宽
@@ -373,7 +373,7 @@ export const createCrudOptions = function ({ crudExpose, context }: CreateCrudOp
 						},
 					},
 					dict: dict({
-						data: dictionary('button_status_bool'),
+						data: dictionary('button_status_bool', undefined),
 					}),
 				},
 				avatar: {
