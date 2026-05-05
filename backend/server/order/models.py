@@ -21,22 +21,25 @@ class TiktokOrder(CoreModel):
     @property
     def item(self):
         """获取关联的订单项，用于序列化器"""
-        if hasattr(self, 'item_list') and self.item_list:
-            return self.item_list[0]
+        items = self.tiktokorderitem_set.all()
+        if items:
+            return items[0]
         return TiktokOrderItem()
 
     @property
     def influencer(self):
         """获取关联的达人信息，用于序列化器"""
-        if hasattr(self, 'influencer_list') and self.influencer_list:
-            return self.influencer_list[0]
+        influencers = self.tiktokorderinfluencer_set.all()
+        if influencers:
+            return influencers[0]
         return TiktokOrderInfluencer()
 
     @property
     def commission(self):
         """获取关联的佣金信息，用于序列化器"""
-        if hasattr(self, 'commission_list') and self.commission_list:
-            return self.commission_list[0]
+        commissions = self.tiktokordercommission_set.all()
+        if commissions:
+            return commissions[0]
         return TiktokOrderCommission()
 
     class Meta:

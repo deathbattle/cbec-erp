@@ -6,6 +6,7 @@
 @Created on: 2021/6/1 001 22:47
 @Remark: 自定义序列化器
 """
+from datetime import datetime
 from rest_framework import serializers
 from rest_framework.fields import empty
 from rest_framework.request import Request
@@ -62,7 +63,18 @@ class CustomModelSerializer(DynamicFieldsMixin, ModelSerializer):
     def save(self, **kwargs):
         return super().save(**kwargs)
 
+    def _convert_timezone_aware_datetimes(self, data):
+        """Convert timezone-aware datetimes to naive datetimes for MySQL with USE_TZ=False"""
+        from django.utils import timezone
+        for key, value in data.items():
+            if value is not None and isinstance(value, datetime) and timezone.is_aware(value):
+                data[key] = timezone.make_naive(value)
+        return data
+
     def create(self, validated_data):
+        # Convert timezone-aware datetimes to naive datetimes
+        validated_data = self._convert_timezone_aware_datetimes(validated_data)
+        
         if self.request:
             if str(self.request.user) != "AnonymousUser":
                 if self.modifier_field_id in self.fields.fields:
@@ -80,6 +92,9 @@ class CustomModelSerializer(DynamicFieldsMixin, ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        # Convert timezone-aware datetimes to naive datetimes
+        validated_data = self._convert_timezone_aware_datetimes(validated_data)
+        
         if self.request:
             if str(self.request.user) != "AnonymousUser":
                 if self.modifier_field_id in self.fields.fields:

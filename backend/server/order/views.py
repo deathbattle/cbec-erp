@@ -1,6 +1,5 @@
-﻿from datetime import timedelta
+from datetime import timedelta
 from django.db.models import Prefetch
-from django.utils import timezone
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from server.order.models import (
@@ -127,6 +126,51 @@ class TiktokOrderCreateUpdateSerializer(CustomModelSerializer):
         ]
         read_only_fields = ["id"]
 
+    def create(self, validated_data):
+        # 提取关联数据
+        item_data = {
+            'product_id': validated_data.pop('product_id', None),
+            'product_name': validated_data.pop('product_name', None),
+            'sku_id': validated_data.pop('sku_id', None),
+            'product_price': validated_data.pop('product_price', None),
+            'order_quantity': validated_data.pop('order_quantity', None),
+        }
+        influencer_data = {
+            'influencer_username': validated_data.pop('influencer_username', None),
+            'content_type': validated_data.pop('content_type', None),
+            'content_id': validated_data.pop('content_id', None),
+        }
+        commission_data = {
+            'commission_model': validated_data.pop('commission_model', None),
+            'standard_commission_rate': validated_data.pop('standard_commission_rate', None),
+            'estimated_commission_amount': validated_data.pop('estimated_commission_amount', None),
+            'estimated_standard_commission': validated_data.pop('estimated_standard_commission', None),
+            'actual_commission_amount': validated_data.pop('actual_commission_amount', None),
+            'actual_commission': validated_data.pop('actual_commission', None),
+            'store_ad_commission_rate': validated_data.pop('store_ad_commission_rate', None),
+            'estimated_store_ad_commission': validated_data.pop('estimated_store_ad_commission', None),
+            'actual_store_ad_commission': validated_data.pop('actual_store_ad_commission', None),
+            'estimated_joint_influencer_bonus': validated_data.pop('estimated_joint_influencer_bonus', None),
+            'actual_joint_influencer_bonus': validated_data.pop('actual_joint_influencer_bonus', None),
+        }
+        
+        # 创建主订单
+        order = TiktokOrder.objects.create(**validated_data)
+        
+        # 创建订单项
+        if any(item_data.values()):
+            TiktokOrderItem.objects.create(order=order, **item_data)
+        
+        # 创建达人信息
+        if any(influencer_data.values()):
+            TiktokOrderInfluencer.objects.create(order=order, **influencer_data)
+        
+        # 创建佣金信息
+        if any(commission_data.values()):
+            TiktokOrderCommission.objects.create(order=order, **commission_data)
+        
+        return order
+
 
 class TiktokOrderViewSet(CustomModelViewSet):
     """
@@ -137,10 +181,11 @@ class TiktokOrderViewSet(CustomModelViewSet):
     retrieve:单例
     destroy:删除
     """
-    queryset = TiktokOrder.objects.all()
+    queryset = TiktokOrder.objects.prefetch_related('tiktokorderitem_set', 'tiktokorderinfluencer_set', 'tiktokordercommission_set')
     serializer_class = TiktokOrderAggregateSerializer
     create_serializer_class = TiktokOrderCreateUpdateSerializer
     update_serializer_class = TiktokOrderCreateUpdateSerializer
+    export_serializer_class = TiktokOrderAggregateSerializer
     filter_fields = [
         "order_id", "payment_method", "order_status", "platform"
     ]
@@ -230,59 +275,8 @@ class TiktokOrderViewSet(CustomModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         
-        # 提取关联数据
-        item_data = {
-            'product_id': request.data.get('product_id'),
-            'product_name': request.data.get('product_name'),
-            'sku_id': request.data.get('sku_id'),
-            'product_price': request.data.get('product_price'),
-            'order_quantity': request.data.get('order_quantity'),
-        }
-        influencer_data = {
-            'influencer_username': request.data.get('influencer_username'),
-            'content_type': request.data.get('content_type'),
-            'content_id': request.data.get('content_id'),
-        }
-        commission_data = {
-            'commission_model': request.data.get('commission_model'),
-            'standard_commission_rate': request.data.get('standard_commission_rate'),
-            'estimated_commission_amount': request.data.get('estimated_commission_amount'),
-            'estimated_standard_commission': request.data.get('estimated_standard_commission'),
-            'actual_commission_amount': request.data.get('actual_commission_amount'),
-            'actual_commission': request.data.get('actual_commission'),
-            'store_ad_commission_rate': request.data.get('store_ad_commission_rate'),
-            'estimated_store_ad_commission': request.data.get('estimated_store_ad_commission'),
-            'actual_store_ad_commission': request.data.get('actual_store_ad_commission'),
-            'estimated_joint_influencer_bonus': request.data.get('estimated_joint_influencer_bonus'),
-            'actual_joint_influencer_bonus': request.data.get('actual_joint_influencer_bonus'),
-        }
-        
-        # 创建主订单
-        order = TiktokOrder.objects.create(
-            order_id=request.data['order_id'],
-            payment_amount=request.data.get('payment_amount'),
-            currency_unit=request.data.get('currency_unit'),
-            is_refunded=request.data.get('is_refunded', False),
-            payment_method=request.data.get('payment_method'),
-            order_status=request.data.get('order_status'),
-            create_time=request.data.get('create_time'),
-            payment_time=request.data.get('payment_time'),
-            delivery_time=request.data.get('delivery_time'),
-            commission_settlement_time=request.data.get('commission_settlement_time'),
-            platform=request.data.get('platform'),
-        )
-        
-        # 创建订单项
-        if any(item_data.values()):
-            TiktokOrderItem.objects.create(order=order, **item_data)
-        
-        # 创建达人信息
-        if any(influencer_data.values()):
-            TiktokOrderInfluencer.objects.create(order=order, **influencer_data)
-        
-        # 创建佣金信息
-        if any(commission_data.values()):
-            TiktokOrderCommission.objects.create(order=order, **commission_data)
+        # 使用 serializer.save() 创建订单（关联数据在 serializer.create 中处理）
+        order = serializer.save()
         
         return DetailResponse(data=TiktokOrderAggregateSerializer(order).data)
 
@@ -300,10 +294,10 @@ class TiktokOrderViewSet(CustomModelViewSet):
         instance.is_refunded = request.data.get('is_refunded', instance.is_refunded)
         instance.payment_method = request.data.get('payment_method', instance.payment_method)
         instance.order_status = request.data.get('order_status', instance.order_status)
-        instance.create_time = request.data.get('create_time', instance.create_time)
-        instance.payment_time = request.data.get('payment_time', instance.payment_time)
-        instance.delivery_time = request.data.get('delivery_time', instance.delivery_time)
-        instance.commission_settlement_time = request.data.get('commission_settlement_time', instance.commission_settlement_time)
+        instance.create_time = make_naive_datetime(request.data.get('create_time', instance.create_time))
+        instance.payment_time = make_naive_datetime(request.data.get('payment_time', instance.payment_time))
+        instance.delivery_time = make_naive_datetime(request.data.get('delivery_time', instance.delivery_time))
+        instance.commission_settlement_time = make_naive_datetime(request.data.get('commission_settlement_time', instance.commission_settlement_time))
         instance.platform = request.data.get('platform', instance.platform)
         instance.save()
         
