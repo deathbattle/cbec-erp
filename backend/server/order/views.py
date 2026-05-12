@@ -1,7 +1,9 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from django.db.models import Prefetch
 from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework import status
 from server.order.models import (
     TiktokOrder, TiktokOrderItem, TiktokOrderInfluencer, TiktokOrderCommission,
     ShangmaOrder
@@ -9,6 +11,13 @@ from server.order.models import (
 from server.utils.json_response import SuccessResponse, DetailResponse
 from server.utils.serializers import CustomModelSerializer
 from server.utils.viewset import CustomModelViewSet
+
+# 导入同步服务
+try:
+    from server.order.tiktok_sync_service import TiktokSyncService
+    SYNC_SERVICE_AVAILABLE = True
+except ImportError:
+    SYNC_SERVICE_AVAILABLE = False
 
 
 class TiktokOrderItemSerializer(CustomModelSerializer):
@@ -361,6 +370,79 @@ class TiktokOrderViewSet(CustomModelViewSet):
         # 删除主订单
         instance.delete()
         return SuccessResponse(msg="删除成功")
+
+    @action(methods=["POST"], detail=False)
+    def sync(self, request):
+        """
+        手动触发TikTok订单同步
+        
+        请求参数:
+        - start_time: 开始时间 (可选, 格式: YYYY-MM-DD HH:MM:SS)
+        - end_time: 结束时间 (可选, 格式: YYYY-MM-DD HH:MM:SS)
+        - days: 最近天数 (可选, 与start_time/end_time互斥)
+        
+        返回:
+        - success: 是否成功
+        - total_fetched: 获取的订单总数
+        - total_created: 新增订单数
+        - total_updated: 更新订单数
+        - message: 提示信息
+        """
+        if not SYNC_SERVICE_AVAILABLE:
+            return Response(
+                {'success': False, 'message': '同步服务不可用'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        
+        try:
+            sync_service = TiktokSyncService()
+            
+            start_time = request.data.get('start_time')
+            end_time = request.data.get('end_time')
+            days = request.data.get('days', 7)
+            
+            # 如果指定了days参数，则同步最近N天的数据
+            if days and not start_time:
+                result = sync_service.sync_recent_orders(days)
+            else:
+                result = sync_service.sync_orders(start_time, end_time)
+            
+            return SuccessResponse(data=result, msg=result.get('message'))
+        
+        except Exception as e:
+            import traceback
+            error_msg = f"同步失败: {str(e)}\n{traceback.format_exc()}"
+            return Response(
+                {'success': False, 'message': error_msg},
+                status=status.HTTP_INTERNAL_SERVER_ERROR
+            )
+
+    @action(methods=["GET"], detail=False)
+    def sync_status(self, request):
+        """
+        获取TikTok订单同步状态
+        
+        返回:
+        - total_orders: 订单总数
+        - last_sync_time: 最后同步时间
+        - sync_enabled: 是否启用同步
+        """
+        if not SYNC_SERVICE_AVAILABLE:
+            return Response(
+                {'sync_enabled': False, 'message': '同步服务不可用'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        
+        try:
+            sync_service = TiktokSyncService()
+            status_info = sync_service.get_sync_status()
+            return SuccessResponse(data=status_info)
+        
+        except Exception as e:
+            return Response(
+                {'success': False, 'message': str(e)},
+                status=status.HTTP_INTERNAL_SERVER_ERROR
+            )
 
 
 class ShangmaOrderSerializer(CustomModelSerializer):

@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django.db import models
 from server.utils.models import CoreModel, table_prefix
 
@@ -6,7 +7,7 @@ class TiktokOrder(CoreModel):
     """
     TikTok订单主表 - 订单基本信息
     """
-    order_id = models.CharField(max_length=64, verbose_name="订单ID", help_text="订单ID", db_index=True)
+    order_id = models.CharField(max_length=64, verbose_name="订单ID", help_text="订单ID", db_index=True, unique=True)
     payment_amount = models.DecimalField(max_digits=18, decimal_places=2, verbose_name="支付金额", help_text="支付金额", null=True, blank=True)
     currency_unit = models.CharField(max_length=10, verbose_name="货币单位", help_text="货币单位", null=True, blank=True)
     is_refunded = models.BooleanField(default=False, verbose_name="已全部退货或全额退款", help_text="已全部退货或全额退款")
@@ -102,6 +103,43 @@ class TiktokOrderCommission(CoreModel):
         db_table = table_prefix + "order_tiktok_commission"
         verbose_name = "TikTok订单佣金"
         verbose_name_plural = verbose_name
+
+
+class TiktokSyncConfig(CoreModel):
+    """
+    TikTok订单同步配置
+    """
+    SYNC_INTERVAL_CHOICES = [
+        (5, '5分钟'),
+        (15, '15分钟'),
+        (30, '30分钟'),
+        (60, '1小时'),
+        (120, '2小时'),
+        (360, '6小时'),
+        (720, '12小时'),
+        (1440, '24小时'),
+    ]
+    
+    is_enabled = models.BooleanField(default=True, verbose_name="启用同步", help_text="启用自动同步")
+    sync_interval = models.IntegerField(default=60, choices=SYNC_INTERVAL_CHOICES, verbose_name="同步周期(分钟)", help_text="自动同步的时间间隔")
+    sync_days = models.IntegerField(default=7, verbose_name="同步天数", help_text="每次同步最近N天的数据")
+    last_sync_time = models.DateTimeField(null=True, blank=True, verbose_name="最后同步时间", help_text="最后一次成功同步的时间")
+    next_sync_time = models.DateTimeField(null=True, blank=True, verbose_name="下次同步时间", help_text="下次自动同步的时间")
+    sync_status = models.CharField(max_length=20, default='idle', verbose_name="同步状态", help_text="同步状态: idle, running, success, failed")
+    sync_message = models.TextField(null=True, blank=True, verbose_name="同步消息", help_text="最近一次同步的结果消息")
+    
+    class Meta:
+        db_table = table_prefix + "order_tiktok_sync_config"
+        verbose_name = "TikTok订单同步配置"
+        verbose_name_plural = verbose_name
+    
+    def update_next_sync_time(self):
+        """计算下次同步时间"""
+        if self.last_sync_time:
+            self.next_sync_time = self.last_sync_time + timedelta(minutes=self.sync_interval)
+        else:
+            self.next_sync_time = datetime.now() + timedelta(minutes=self.sync_interval)
+        self.save()
 
 
 class ShangmaOrder(CoreModel):

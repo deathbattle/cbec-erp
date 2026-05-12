@@ -14,6 +14,7 @@ import os
 import sys
 from pathlib import Path
 from datetime import timedelta
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -385,6 +386,24 @@ API_MODEL_MAP = {
 
 DJANGO_CELERY_BEAT_TZ_AWARE = False
 CELERY_TIMEZONE = "Asia/Shanghai"  # celery 时区问题
+
+# ================================================= #
+# ****************** Celery Beat 定时任务配置 ***************** #
+# ================================================= #
+CELERY_BEAT_SCHEDULE = {
+    # TikTok订单同步任务 - 每小时执行一次
+    'sync-tiktok-orders-every-hour': {
+        'task': 'sync_tiktok_orders',
+        'schedule': crontab(minute=0),  # 每小时整点执行
+        'args': (7,),  # 同步最近7天的数据
+    },
+    # TikTok订单全量同步任务 - 每天凌晨2点执行
+    'sync-tiktok-orders-full-daily': {
+        'task': 'sync_tiktok_orders_full',
+        'schedule': crontab(hour=2, minute=0),  # 每天凌晨2点执行
+    },
+}
+
 # 静态页面压缩
 STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 
