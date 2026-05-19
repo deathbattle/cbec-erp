@@ -1,7 +1,10 @@
+"""
+TikTok API 客户端 - 对接 TikTok Shop 开放平台
+
+官方文档: https://developers.tiktok.com/doc/order-management-api
+"""
 import requests
-import json
 import time
-import random
 import hashlib
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional, Tuple
@@ -13,9 +16,6 @@ logger = __import__('logging').getLogger(__name__)
 class TiktokApiClient:
     """
     TikTok API 客户端 - 支持动态凭证和自动 Token 刷新
-    
-    注：这是一个模拟实现，实际生产环境需要对接 TikTok 官方开放平台 API：
-    https://developers.tiktok.com/doc/order-management-api
     """
     
     def __init__(self, access_token: str = None, shop_id: str = None):
@@ -27,8 +27,8 @@ class TiktokApiClient:
             shop_id: 动态传入的 shop_id（可选）
         """
         self.base_url = getattr(settings, 'TIKTOK_API_BASE_URL', 'https://open-api.tiktokglobalshop.com')
-        self.app_key = getattr(settings, 'TIKTOK_APP_KEY', 'test_app_key')
-        self.app_secret = getattr(settings, 'TIKTOK_APP_SECRET', 'test_app_secret')
+        self.app_key = getattr(settings, 'TIKTOK_APP_KEY', '')
+        self.app_secret = getattr(settings, 'TIKTOK_APP_SECRET', '')
         
         self.access_token = access_token
         self.shop_id = shop_id
@@ -85,7 +85,7 @@ class TiktokApiClient:
     
     def _refresh_access_token(self, refresh_token: str) -> Tuple[str, int]:
         """
-        刷新 access_token（生产环境实现）
+        刷新 access_token
         
         Args:
             refresh_token: 刷新 token
@@ -125,7 +125,7 @@ class TiktokApiClient:
     def _make_request(self, endpoint: str, method: str = 'GET', params: Dict = None, 
                       data: Dict = None, access_token: str = None, shop_id: str = None) -> Dict:
         """
-        发送 API 请求（支持动态凭证和自动刷新）
+        发送 API 请求（支持动态凭证）
         
         Args:
             endpoint: API 端点
@@ -157,11 +157,6 @@ class TiktokApiClient:
         
         params['sign'] = self._generate_signature(params)
         
-        if endpoint == '/api/orders/search':
-            return self._mock_order_search_response(params)
-        elif endpoint == '/api/orders/detail':
-            return self._mock_order_detail_response(params)
-        
         url = f"{self.base_url}{endpoint}"
         
         try:
@@ -178,123 +173,6 @@ class TiktokApiClient:
         except requests.exceptions.RequestException as e:
             logger.error(f"API 请求失败：{str(e)}")
             return {"code": 500, "message": f"网络请求失败：{str(e)}", "data": None}
-    
-    def _mock_order_search_response(self, params: Dict) -> Dict:
-        """模拟订单搜索响应"""
-        page_size = params.get('page_size', 20)
-        page_num = params.get('page_num', 1)
-        start_time = params.get('create_time_from')
-        end_time = params.get('create_time_to')
-        
-        orders = []
-        for i in range(page_size):
-            order_id = f"ORDER_{page_num}_{i}_{int(time.time())}"
-            create_time = datetime.now() - timedelta(days=random.randint(0, 7), hours=random.randint(0, 23))
-            
-            orders.append({
-                "order_id": order_id,
-                "order_no": f"TTD{order_id}",
-                "payment_amount": round(random.uniform(10, 500), 2),
-                "currency_unit": "USD",
-                "is_refunded": random.choice([True, False]),
-                "payment_method": random.choice(["PayPal", "CreditCard", "TikTokPay"]),
-                "order_status": random.choice(["PAID", "SHIPPED", "DELIVERED", "COMPLETED", "REFUNDED"]),
-                "create_time": create_time.strftime("%Y-%m-%d %H:%M:%S"),
-                "payment_time": (create_time + timedelta(minutes=random.randint(5, 30))).strftime("%Y-%m-%d %H:%M:%S"),
-                "delivery_time": (create_time + timedelta(days=random.randint(1, 5))).strftime("%Y-%m-%d %H:%M:%S"),
-                "commission_settlement_time": (create_time + timedelta(days=random.randint(7, 14))).strftime("%Y-%m-%d %H:%M:%S"),
-                "platform": "TikTok",
-                "items": [
-                    {
-                        "product_id": f"PROD_{random.randint(1000, 9999)}",
-                        "product_name": f"Product {random.randint(1, 100)}",
-                        "sku_id": f"SKU_{random.randint(100, 999)}",
-                        "product_price": round(random.uniform(10, 200), 2),
-                        "order_quantity": random.randint(1, 5)
-                    }
-                ],
-                "influencer": {
-                    "influencer_username": f"Influencer_{random.randint(1000, 9999)}",
-                    "content_type": random.choice(["VIDEO", "LIVE", "FEED"]),
-                    "content_id": f"CONTENT_{random.randint(10000, 99999)}"
-                },
-                "commission": {
-                    "commission_model": "STANDARD",
-                    "standard_commission_rate": round(random.uniform(0.05, 0.2), 4),
-                    "estimated_commission_amount": round(random.uniform(1, 50), 2),
-                    "estimated_standard_commission": round(random.uniform(1, 50), 2),
-                    "actual_commission_amount": round(random.uniform(1, 50), 2),
-                    "actual_commission": round(random.uniform(1, 50), 2),
-                    "store_ad_commission_rate": round(random.uniform(0, 0.05), 4),
-                    "estimated_store_ad_commission": round(random.uniform(0, 10), 2),
-                    "actual_store_ad_commission": round(random.uniform(0, 10), 2),
-                    "estimated_joint_influencer_bonus": round(random.uniform(0, 5), 2),
-                    "actual_joint_influencer_bonus": round(random.uniform(0, 5), 2)
-                }
-            })
-        
-        return {
-            "code": 0,
-            "message": "success",
-            "data": {
-                "orders": orders,
-                "total": 100,
-                "page_num": page_num,
-                "page_size": page_size,
-                "total_pages": 5
-            }
-        }
-    
-    def _mock_order_detail_response(self, params: Dict) -> Dict:
-        """模拟订单详情响应"""
-        order_id = params.get('order_id')
-        create_time = datetime.now() - timedelta(days=random.randint(0, 7))
-        
-        return {
-            "code": 0,
-            "message": "success",
-            "data": {
-                "order_id": order_id,
-                "order_no": f"TTD{order_id}",
-                "payment_amount": round(random.uniform(10, 500), 2),
-                "currency_unit": "USD",
-                "is_refunded": random.choice([True, False]),
-                "payment_method": random.choice(["PayPal", "CreditCard", "TikTokPay"]),
-                "order_status": random.choice(["PAID", "SHIPPED", "DELIVERED", "COMPLETED", "REFUNDED"]),
-                "create_time": create_time.strftime("%Y-%m-%d %H:%M:%S"),
-                "payment_time": (create_time + timedelta(minutes=random.randint(5, 30))).strftime("%Y-%m-%d %H:%M:%S"),
-                "delivery_time": (create_time + timedelta(days=random.randint(1, 5))).strftime("%Y-%m-%d %H:%M:%S"),
-                "commission_settlement_time": (create_time + timedelta(days=random.randint(7, 14))).strftime("%Y-%m-%d %H:%M:%S"),
-                "platform": "TikTok",
-                "items": [
-                    {
-                        "product_id": f"PROD_{random.randint(1000, 9999)}",
-                        "product_name": f"Product {random.randint(1, 100)}",
-                        "sku_id": f"SKU_{random.randint(100, 999)}",
-                        "product_price": round(random.uniform(10, 200), 2),
-                        "order_quantity": random.randint(1, 5)
-                    }
-                ],
-                "influencer": {
-                    "influencer_username": f"Influencer_{random.randint(1000, 9999)}",
-                    "content_type": random.choice(["VIDEO", "LIVE", "FEED"]),
-                    "content_id": f"CONTENT_{random.randint(10000, 99999)}"
-                },
-                "commission": {
-                    "commission_model": "STANDARD",
-                    "standard_commission_rate": round(random.uniform(0.05, 0.2), 4),
-                    "estimated_commission_amount": round(random.uniform(1, 50), 2),
-                    "estimated_standard_commission": round(random.uniform(1, 50), 2),
-                    "actual_commission_amount": round(random.uniform(1, 50), 2),
-                    "actual_commission": round(random.uniform(1, 50), 2),
-                    "store_ad_commission_rate": round(random.uniform(0, 0.05), 4),
-                    "estimated_store_ad_commission": round(random.uniform(0, 10), 2),
-                    "actual_store_ad_commission": round(random.uniform(0, 10), 2),
-                    "estimated_joint_influencer_bonus": round(random.uniform(0, 5), 2),
-                    "actual_joint_influencer_bonus": round(random.uniform(0, 5), 2)
-                }
-            }
-        }
     
     def search_orders(self, 
                       start_time: Optional[str] = None, 
