@@ -420,6 +420,9 @@ TIKTOK_SHOP_ID = locals().get("TIKTOK_SHOP_ID", "your_shop_id_here")
 # TikTok API基础URL（生产环境）
 TIKTOK_API_BASE_URL = "https://open-api.tiktokglobalshop.com"
 
+# OAuth 回调地址（需要在 TikTok 开放平台配置）
+TIKTOK_REDIRECT_URI = locals().get("TIKTOK_REDIRECT_URI", "http://localhost:8000/api/order/tiktok/callback/")
+
 ALL_MODELS_OBJECTS = []  # 所有app models 对象
 
 # 初始化需要执行的列表，用来初始化后执行

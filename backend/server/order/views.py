@@ -664,3 +664,280 @@ class OrderStatisticsViewSet(viewsets.ViewSet):
             'tiktok_amount': float(tiktok_amount),
             'shangma_amount': float(shangma_amount)
         })
+
+
+# ================================================= #
+# ****************** TikTok OAuth 授权视图 ***************** #
+# ================================================= #
+
+class TiktokOAuthViewSet(viewsets.ViewSet):
+    """
+    TikTok OAuth 授权接口
+    """
+    
+    def _get_client(self):
+        """获取 TikTok API 客户端"""
+        from server.order.tiktok_api_client import TiktokApiClient
+        return TiktokApiClient()
+    
+    @action(methods=["GET"], detail=False)
+    def get_auth_url(self, request):
+        """
+        获取授权链接
+        
+        返回:
+        - auth_url: 授权链接
+        - state: 状态参数（用于防止 CSRF）
+        
+        使用示例:
+        GET /api/order/tiktok/oauth/get_auth_url/
+        
+        前端跳转到 auth_url 进行授权
+        """
+        import uuid
+        state = str(uuid.uuid4())
+        
+        try:
+            client = self._get_client()
+            auth_url = client.get_authorization_url(state=state)
+            
+            return SuccessResponse(data={
+                'auth_url': auth_url,
+                'state': state
+            })
+        
+        except Exception as e:
+            return Response(
+                {'success': False, 'message': f'获取授权链接失败: {str(e)}'},
+                status=status.HTTP_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(methods=["GET"], detail=False)
+    def callback(self, request):
+        """
+        授权回调处理
+        
+        请求参数:
+        - code: 授权码
+        - state: 状态参数
+        
+        返回:
+        - success: 是否成功
+        - access_token: 访问令牌
+        - refresh_token: 刷新令牌
+        - shop_id: 店铺ID
+        - shop_cipher: 跨境店需要的 shop_cipher
+        - message: 提示信息
+        
+        使用示例:
+        GET /api/order/tiktok/oauth/callback/?code=xxx&state=yyy
+        """
+        code = request.query_params.get('code')
+        state = request.query_params.get('state')
+        
+        if not code:
+            return Response(
+                {'success': False, 'message': '缺少授权码(code)'},
+                status=status.HTTP_BAD_REQUEST
+            )
+        
+        try:
+            client = self._get_client()
+            
+            # 使用授权码换取 access_token
+            result = client.get_access_token(code=code)
+            
+            if result.get('code') == 0:
+                data = result.get('data', {})
+                
+                return SuccessResponse(data={
+                    'success': True,
+                    'access_token': data.get('access_token'),
+                    'refresh_token': data.get('refresh_token'),
+                    'expires_in': data.get('expires_in'),
+                    'shop_id': data.get('shop_id'),
+                    'shop_cipher': data.get('shop_cipher'),
+                    'message': '授权成功'
+                })
+            else:
+                return Response(
+                    {'success': False, 'message': result.get('message', '授权失败')},
+                    status=status.HTTP_BAD_REQUEST
+                )
+        
+        except Exception as e:
+            import traceback
+            error_msg = f'授权回调处理失败: {str(e)}\n{traceback.format_exc()}'
+            return Response(
+                {'success': False, 'message': error_msg},
+                status=status.HTTP_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(methods=["POST"], detail=False)
+    def refresh_token(self, request):
+        """
+        刷新 access_token
+        
+        请求参数:
+        - refresh_token: 刷新令牌
+        
+        返回:
+        - success: 是否成功
+        - access_token: 新的访问令牌
+        - refresh_token: 新的刷新令牌
+        - expires_in: 有效期（秒）
+        - message: 提示信息
+        
+        使用示例:
+        POST /api/order/tiktok/oauth/refresh_token/
+        {
+            "refresh_token": "your_refresh_token"
+        }
+        """
+        refresh_token = request.data.get('refresh_token')
+        
+        if not refresh_token:
+            return Response(
+                {'success': False, 'message': '缺少 refresh_token'},
+                status=status.HTTP_BAD_REQUEST
+            )
+        
+        try:
+            client = self._get_client()
+            result = client.refresh_access_token(refresh_token=refresh_token)
+            
+            if result.get('code') == 0:
+                data = result.get('data', {})
+                
+                return SuccessResponse(data={
+                    'success': True,
+                    'access_token': data.get('access_token'),
+                    'refresh_token': data.get('refresh_token'),
+                    'expires_in': data.get('expires_in'),
+                    'message': 'Token 刷新成功'
+                })
+            else:
+                return Response(
+                    {'success': False, 'message': result.get('message', 'Token 刷新失败')},
+                    status=status.HTTP_BAD_REQUEST
+                )
+        
+        except Exception as e:
+            import traceback
+            error_msg = f'Token 刷新失败: {str(e)}\n{traceback.format_exc()}'
+            return Response(
+                {'success': False, 'message': error_msg},
+                status=status.HTTP_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(methods=["POST"], detail=False)
+    def get_shops(self, request):
+        """
+        获取授权的店铺列表（推荐方式）
+        
+        请求参数:
+        - access_token: 访问令牌（可选，未提供则使用配置中的 token）
+        
+        返回:
+        - success: 是否成功
+        - shops: 店铺列表
+        - message: 提示信息
+        
+        使用示例:
+        POST /api/order/tiktok/oauth/get_shops/
+        {
+            "access_token": "your_access_token"
+        }
+        """
+        access_token = request.data.get('access_token')
+        
+        try:
+            client = self._get_client()
+            
+            if access_token:
+                client.set_credentials(access_token=access_token, shop_id='')
+            
+            result = client.get_authorized_shops()
+            
+            if result.get('code') == 0:
+                data = result.get('data', {})
+                
+                return SuccessResponse(data={
+                    'success': True,
+                    'shops': data.get('shops', []),
+                    'message': '获取店铺列表成功'
+                })
+            else:
+                return Response(
+                    {'success': False, 'message': result.get('message', '获取店铺列表失败')},
+                    status=status.HTTP_BAD_REQUEST
+                )
+        
+        except Exception as e:
+            import traceback
+            error_msg = f'获取店铺列表失败: {str(e)}\n{traceback.format_exc()}'
+            return Response(
+                {'success': False, 'message': error_msg},
+                status=status.HTTP_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(methods=["POST"], detail=False)
+    def save_credentials(self, request):
+        """
+        保存 TikTok 凭证配置
+        
+        请求参数:
+        - access_token: 访问令牌
+        - refresh_token: 刷新令牌
+        - shop_id: 店铺ID
+        - shop_cipher: 跨境店需要的 shop_cipher（可选）
+        
+        返回:
+        - success: 是否成功
+        - message: 提示信息
+        
+        使用示例:
+        POST /api/order/tiktok/oauth/save_credentials/
+        {
+            "access_token": "your_access_token",
+            "refresh_token": "your_refresh_token",
+            "shop_id": "your_shop_id",
+            "shop_cipher": "your_shop_cipher"
+        }
+        """
+        from server.order.models import TiktokSyncConfig
+        
+        access_token = request.data.get('access_token')
+        refresh_token = request.data.get('refresh_token')
+        shop_id = request.data.get('shop_id')
+        shop_cipher = request.data.get('shop_cipher')
+        
+        if not access_token or not shop_id:
+            return Response(
+                {'success': False, 'message': '缺少必要参数（access_token 和 shop_id 为必填）'},
+                status=status.HTTP_BAD_REQUEST
+            )
+        
+        try:
+            # 获取或创建配置
+            config, created = TiktokSyncConfig.objects.get_or_create(id=1)
+            
+            # 更新配置
+            config.access_token = access_token
+            config.refresh_token = refresh_token
+            config.shop_id = shop_id
+            config.shop_cipher = shop_cipher
+            config.save()
+            
+            return SuccessResponse(data={
+                'success': True,
+                'message': '凭证配置保存成功'
+            })
+        
+        except Exception as e:
+            import traceback
+            error_msg = f'保存凭证配置失败: {str(e)}\n{traceback.format_exc()}'
+            return Response(
+                {'success': False, 'message': error_msg},
+                status=status.HTTP_INTERNAL_SERVER_ERROR
+            )
