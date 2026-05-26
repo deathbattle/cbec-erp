@@ -139,6 +139,79 @@ class TiktokSyncService:
             defaults=defaults
         )
     
+    def _get_credentials(self) -> Tuple[str, str]:
+        """
+        获取有效的 access_token 和 shop_id
+        
+        从数据库读取配置，尝试刷新 token，获取店铺信息
+        
+        Returns:
+            (access_token, shop_id)
+        """
+        from .models import TiktokSyncConfig
+        
+        access_token = None
+        shop_id = None
+        
+        try:
+            # 从数据库获取配置
+            config = TiktokSyncConfig.objects.first()
+            if not config:
+                logger.warning("未找到TikTok同步配置，使用默认配置")
+                return access_token, shop_id
+            
+            access_token = config.access_token
+            refresh_token = config.refresh_token
+            shop_id = config.shop_id
+            
+            # 如果有 refresh_token，尝试刷新 access_token
+            if refresh_token:
+                logger.info("尝试刷新 access_token...")
+                refresh_result = self.api_client.refresh_access_token(refresh_token)
+                
+                if refresh_result.get('code') == 0:
+                    data = refresh_result.get('data', {})
+                    new_token = data.get('access_token')
+                    new_refresh_token = data.get('refresh_token')
+                    
+                    if new_token:
+                        access_token = new_token
+                        logger.info("access_token 刷新成功")
+                        
+                        # 更新数据库中的凭证
+                        config.access_token = new_token
+                        if new_refresh_token:
+                            config.refresh_token = new_refresh_token
+                        config.save()
+                else:
+                    logger.warning(f"access_token 刷新失败，使用原token: {refresh_result.get('message')}")
+            
+            # 如果没有 shop_id，尝试从 API 获取
+            if access_token and not shop_id:
+                logger.info("尝试获取店铺信息...")
+                shops_result = self.api_client.get_authorized_shops(access_token)
+                
+                if shops_result.get('code') == 0:
+                    data = shops_result.get('data', {})
+                    shops = data.get('shops', [])
+                    
+                    if shops:
+                        shop_id = shops[0].get('shop_id')
+                        shop_cipher = shops[0].get('shop_cipher')
+                        logger.info(f"获取店铺信息成功，shop_id: {shop_id}")
+                        
+                        # 更新数据库配置
+                        config.shop_id = shop_id
+                        if shop_cipher:
+                            config.shop_cipher = shop_cipher
+                        config.save()
+            
+            return access_token, shop_id
+            
+        except Exception as e:
+            logger.error(f"获取凭证失败: {str(e)}")
+            return access_token, shop_id
+    
     @transaction.atomic
     def sync_orders(self, 
                     start_time: Optional[str] = None, 
@@ -155,6 +228,31 @@ class TiktokSyncService:
         """
         logger.info(f"开始同步TikTok订单，时间范围: {start_time} - {end_time}")
         
+        # ===== 新增：先获取/刷新凭证 =====
+        access_token, shop_id = self._get_credentials()
+        
+        if not access_token:
+            logger.error("无法获取有效的 access_token")
+            return {
+                'success': False,
+                'total_fetched': 0,
+                'total_created': 0,
+                'total_updated': 0,
+                'message': '无法获取有效的 access_token，请先完成授权'
+            }
+        
+        if not shop_id:
+            logger.error("无法获取有效的 shop_id")
+            return {
+                'success': False,
+                'total_fetched': 0,
+                'total_created': 0,
+                'total_updated': 0,
+                'message': '无法获取有效的 shop_id'
+            }
+        
+        logger.info(f"使用凭证: access_token={access_token[:10]}..., shop_id={shop_id}")
+        
         start_datetime = None
         if start_time:
             start_datetime = self._parse_datetime(start_time)
@@ -167,8 +265,10 @@ class TiktokSyncService:
         if not end_time:
             end_time = datetime.now().strftime("%Y-%m-%d 23:59:59")
         
-        # 从API获取订单数据
-        orders_data = self.api_client.sync_orders(start_time, end_time)
+        # 从API获取订单数据（传入动态凭证）
+        orders_data = self.api_client.sync_orders(start_time, end_time, 
+                                                   access_token=access_token, 
+                                                   shop_id=shop_id)
         
         if not orders_data:
             logger.info("没有获取到TikTok订单数据")

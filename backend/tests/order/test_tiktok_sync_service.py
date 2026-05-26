@@ -32,8 +32,12 @@ class TiktokSyncServiceTests(TestCase):
             self.assertEqual(result, expected)
     
     @patch.object(TiktokApiClient, 'sync_orders')
-    def test_sync_orders(self, mock_sync_orders):
+    @patch.object(TiktokSyncService, '_get_credentials')
+    def test_sync_orders(self, mock_get_credentials, mock_sync_orders):
         """测试同步订单功能"""
+        # Mock 凭证获取
+        mock_get_credentials.return_value = ('test_access_token', 'test_shop_id')
+        
         mock_sync_orders.return_value = [
             {
                 'order_id': 'TEST_ORDER_001',
@@ -88,8 +92,12 @@ class TiktokSyncServiceTests(TestCase):
         self.assertFalse(order.is_refunded)
     
     @patch.object(TiktokApiClient, 'sync_orders')
-    def test_sync_orders_update(self, mock_sync_orders):
+    @patch.object(TiktokSyncService, '_get_credentials')
+    def test_sync_orders_update(self, mock_get_credentials, mock_sync_orders):
         """测试更新已存在的订单"""
+        # Mock 凭证获取
+        mock_get_credentials.return_value = ('test_access_token', 'test_shop_id')
+        
         TiktokOrder.objects.create(
             order_id='TEST_ORDER_002',
             payment_amount=50.0,
