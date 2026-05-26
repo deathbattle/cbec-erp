@@ -415,7 +415,9 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 TIKTOK_APP_KEY = locals().get("TIKTOK_APP_KEY", "6k1goiajkac4r")
 TIKTOK_APP_SECRET = locals().get("TIKTOK_APP_SECRET", "4c183bf939cc667c3103e857183a9b8d575ad568")
 TIKTOK_ACCESS_TOKEN = locals().get("TIKTOK_ACCESS_TOKEN", "your_access_token_here")
+TIKTOK_REFRESH_TOKEN = locals().get("TIKTOK_REFRESH_TOKEN", "your_refresh_token_here")
 TIKTOK_SHOP_ID = locals().get("TIKTOK_SHOP_ID", "your_shop_id_here")
+TIKTOK_SHOP_CIPHER = locals().get("TIKTOK_SHOP_CIPHER", "")  # 跨境店需要
 
 # TikTok API基础URL（生产环境）
 TIKTOK_API_BASE_URL = "https://open-api.tiktokglobalshop.com"
