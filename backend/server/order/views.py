@@ -727,6 +727,7 @@ class TiktokOAuthViewSet(viewsets.ViewSet):
         - refresh_token: 刷新令牌
         - shop_id: 店铺ID
         - shop_cipher: 跨境店需要的 shop_cipher
+        - shops: 店铺列表
         - message: 提示信息
         
         使用示例:
@@ -749,14 +750,41 @@ class TiktokOAuthViewSet(viewsets.ViewSet):
             
             if result.get('code') == 0:
                 data = result.get('data', {})
+                access_token = data.get('access_token')
+                refresh_token = data.get('refresh_token')
+                shop_id_from_token = data.get('shop_id')
+                shop_cipher_from_token = data.get('shop_cipher')
+                
+                # 获取店铺信息（推荐方式）
+                shops_result = client.get_authorized_shops(access_token)
+                shops = []
+                shop_id = shop_id_from_token
+                shop_cipher = shop_cipher_from_token
+                
+                if shops_result.get('code') == 0:
+                    shops_data = shops_result.get('data', {})
+                    shops = shops_data.get('shops', [])
+                    
+                    if shops:
+                        first_shop = shops[0]
+                        shop_id = first_shop.get('shop_id') or shop_id_from_token
+                        shop_cipher = first_shop.get('shop_cipher') or shop_cipher_from_token
+                
+                # 检查是否有可用店铺
+                if not shop_id or (not shops and not shop_id_from_token):
+                    return Response(
+                        {'success': False, 'message': '没有可用的店铺，请先在TikTok开放平台绑定店铺'},
+                        status=status.HTTP_BAD_REQUEST
+                    )
                 
                 return SuccessResponse(data={
                     'success': True,
-                    'access_token': data.get('access_token'),
-                    'refresh_token': data.get('refresh_token'),
+                    'access_token': access_token,
+                    'refresh_token': refresh_token,
                     'expires_in': data.get('expires_in'),
-                    'shop_id': data.get('shop_id'),
-                    'shop_cipher': data.get('shop_cipher'),
+                    'shop_id': shop_id,
+                    'shop_cipher': shop_cipher,
+                    'shops': shops,
                     'message': '授权成功'
                 })
             else:

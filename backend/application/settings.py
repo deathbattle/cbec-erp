@@ -412,13 +412,12 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
 # ================================================= #
 # TikTok Shop开放平台API配置
 # 获取方式: https://developers.tiktokglobalshop.com/
-# 授权流程: python manage.py init_tiktok_auth
 TIKTOK_APP_KEY = locals().get("TIKTOK_APP_KEY", "6k1goiajkac4r")
 TIKTOK_APP_SECRET = locals().get("TIKTOK_APP_SECRET", "4c183bf939cc667c3103e857183a9b8d575ad568")
-TIKTOK_ACCESS_TOKEN = locals().get("TIKTOK_ACCESS_TOKEN", "v1.0.0-xxx-xxx-xxx")
-TIKTOK_REFRESH_TOKEN = locals().get("TIKTOK_REFRESH_TOKEN", "v1.0.0-xxx-xxx-xxx")
-TIKTOK_SHOP_ID = locals().get("TIKTOK_SHOP_ID", "123456789")
-TIKTOK_SHOP_CIPHER = locals().get("TIKTOK_SHOP_CIPHER", "abc123xyz")  # 跨境店需要
+TIKTOK_ACCESS_TOKEN = locals().get("TIKTOK_ACCESS_TOKEN", "your_access_token_here")
+TIKTOK_REFRESH_TOKEN = locals().get("TIKTOK_REFRESH_TOKEN", "your_refresh_token_here")
+TIKTOK_SHOP_ID = locals().get("TIKTOK_SHOP_ID", "your_shop_id_here")
+TIKTOK_SHOP_CIPHER = locals().get("TIKTOK_SHOP_CIPHER", "")  # 跨境店需要
 
 # TikTok API基础URL（生产环境）
 TIKTOK_API_BASE_URL = "https://open-api.tiktokglobalshop.com"
