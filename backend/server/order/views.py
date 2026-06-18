@@ -95,6 +95,7 @@ class TiktokOrderCreateUpdateSerializer(CustomModelSerializer):
     """
     TikTok订单创建/更新序列化器 - 接收前端格式数据
     """
+    id = serializers.IntegerField(allow_null=True, required=False)
     # 商品信息
     product_id = serializers.CharField(allow_null=True, required=False)
     product_name = serializers.CharField(allow_null=True, required=False)
@@ -123,7 +124,7 @@ class TiktokOrderCreateUpdateSerializer(CustomModelSerializer):
     class Meta:
         model = TiktokOrder
         fields = [
-            "order_id", "payment_amount", "currency_unit", "is_refunded",
+            "id", "order_id", "payment_amount", "currency_unit", "is_refunded",
             "payment_method", "order_status", "create_time", "payment_time",
             "delivery_time", "commission_settlement_time", "platform",
             "product_id", "product_name", "sku_id", "product_price", "order_quantity",
@@ -180,6 +181,65 @@ class TiktokOrderCreateUpdateSerializer(CustomModelSerializer):
         
         return order
 
+    def update(self, instance, validated_data):
+        # 提取关联数据
+        item_data = {
+            'product_id': validated_data.pop('product_id', None),
+            'product_name': validated_data.pop('product_name', None),
+            'sku_id': validated_data.pop('sku_id', None),
+            'product_price': validated_data.pop('product_price', None),
+            'order_quantity': validated_data.pop('order_quantity', None),
+        }
+        influencer_data = {
+            'influencer_username': validated_data.pop('influencer_username', None),
+            'content_type': validated_data.pop('content_type', None),
+            'content_id': validated_data.pop('content_id', None),
+        }
+        commission_data = {
+            'commission_model': validated_data.pop('commission_model', None),
+            'standard_commission_rate': validated_data.pop('standard_commission_rate', None),
+            'estimated_commission_amount': validated_data.pop('estimated_commission_amount', None),
+            'estimated_standard_commission': validated_data.pop('estimated_standard_commission', None),
+            'actual_commission_amount': validated_data.pop('actual_commission_amount', None),
+            'actual_commission': validated_data.pop('actual_commission', None),
+            'store_ad_commission_rate': validated_data.pop('store_ad_commission_rate', None),
+            'estimated_store_ad_commission': validated_data.pop('estimated_store_ad_commission', None),
+            'actual_store_ad_commission': validated_data.pop('actual_store_ad_commission', None),
+            'estimated_joint_influencer_bonus': validated_data.pop('estimated_joint_influencer_bonus', None),
+            'actual_joint_influencer_bonus': validated_data.pop('actual_joint_influencer_bonus', None),
+        }
+        
+        # 更新主订单字段
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # 更新或创建订单项（过滤掉 None 值，只更新有实际数据的字段）
+        filtered_item_data = {k: v for k, v in item_data.items() if v is not None}
+        if filtered_item_data:
+            item, created = TiktokOrderItem.objects.update_or_create(
+                order=instance,
+                defaults=filtered_item_data
+            )
+        
+        # 更新或创建达人信息（过滤掉 None 值，只更新有实际数据的字段）
+        filtered_influencer_data = {k: v for k, v in influencer_data.items() if v is not None}
+        if filtered_influencer_data:
+            influencer, created = TiktokOrderInfluencer.objects.update_or_create(
+                order=instance,
+                defaults=filtered_influencer_data
+            )
+        
+        # 更新或创建佣金信息（过滤掉 None 值，只更新有实际数据的字段）
+        filtered_commission_data = {k: v for k, v in commission_data.items() if v is not None}
+        if filtered_commission_data:
+            commission, created = TiktokOrderCommission.objects.update_or_create(
+                order=instance,
+                defaults=filtered_commission_data
+            )
+        
+        return instance
+
 
 class TiktokOrderViewSet(CustomModelViewSet):
     """
@@ -202,8 +262,8 @@ class TiktokOrderViewSet(CustomModelViewSet):
         "order_id"
     ]
     export_field_label = {
-        "order_id": "订单ID",
-        "product_id": "商品ID",
+        "order_id": "订单 ID",
+        "product_id": "商品 ID",
         "product_name": "商品名称",
         "sku_id": "SKU ID",
         "product_price": "商品价格",
@@ -216,9 +276,9 @@ class TiktokOrderViewSet(CustomModelViewSet):
         "influencer_username": "达人用户名",
         "content_type": "内容形式",
         "content_id": "内容ID",
-        "commission_model": "佣金模型",
+        "commission_model": "commission model",
         "standard_commission_rate": "标准佣金率",
-        "estimated_commission_amount": "预估佣金金额",
+        "estimated_commission_amount": "预估计佣金额",
         "estimated_standard_commission": "预计标准佣金付款",
         "actual_commission_amount": "实际计佣金额",
         "actual_commission": "实际佣金",
@@ -235,8 +295,8 @@ class TiktokOrderViewSet(CustomModelViewSet):
     }
     import_serializer_class = TiktokOrderCreateUpdateSerializer
     import_field_dict = {
-        "order_id": "订单ID",
-        "product_id": "商品ID",
+        "order_id": "订单 ID",
+        "product_id": "商品 ID",
         "product_name": "商品名称",
         "sku_id": "SKU ID",
         "product_price": "商品价格",
@@ -249,9 +309,9 @@ class TiktokOrderViewSet(CustomModelViewSet):
         "influencer_username": "达人用户名",
         "content_type": "内容形式",
         "content_id": "内容ID",
-        "commission_model": "佣金模型",
+        "commission_model": "commission model",
         "standard_commission_rate": "标准佣金率",
-        "estimated_commission_amount": "预估佣金金额",
+        "estimated_commission_amount": "预估计佣金额",
         "estimated_standard_commission": "预计标准佣金付款",
         "actual_commission_amount": "实际计佣金额",
         "actual_commission": "实际佣金",
@@ -260,10 +320,10 @@ class TiktokOrderViewSet(CustomModelViewSet):
         "actual_store_ad_commission": "实际店铺广告佣金付款",
         "estimated_joint_influencer_bonus": "预估合资达人奖金",
         "actual_joint_influencer_bonus": "实际合资达人奖金",
-        "create_time": "创建时间",
-        "payment_time": "支付时间",
-        "delivery_time": "订单送达时间",
-        "commission_settlement_time": "佣金结算时间",
+        "create_time": {"title": "创建时间", "type": "datetime"},
+        "payment_time": {"title": "支付时间", "type": "datetime"},
+        "delivery_time": {"title": "订单送达时间", "type": "datetime"},
+        "commission_settlement_time": {"title": "佣金结算时间", "type": "datetime"},
         "platform": "平台",
     }
 
@@ -370,6 +430,84 @@ class TiktokOrderViewSet(CustomModelViewSet):
         # 删除主订单
         instance.delete()
         return SuccessResponse(msg="删除成功")
+
+    @action(methods=["POST"], detail=False)
+    def import_data(self, request):
+        """
+        导入TikTok订单数据，先清理关联表中指向不存在主表记录的数据
+        
+        请求参数:
+        - url: Excel文件URL
+        
+        返回:
+        - message: 导入结果信息
+        """
+        # 清理关联表中孤立的数据（外键指向不存在的主表记录）
+        existing_order_ids = set(TiktokOrder.objects.values_list('id', flat=True))
+        
+        # 清理订单项中孤立的数据
+        orphan_items = TiktokOrderItem.objects.exclude(order_id__in=existing_order_ids)
+        orphan_item_count = orphan_items.count()
+        if orphan_item_count > 0:
+            orphan_items.delete()
+        
+        # 清理达人信息中孤立的数据
+        orphan_influencers = TiktokOrderInfluencer.objects.exclude(order_id__in=existing_order_ids)
+        orphan_influencer_count = orphan_influencers.count()
+        if orphan_influencer_count > 0:
+            orphan_influencers.delete()
+        
+        # 清理佣金信息中孤立的数据
+        orphan_commissions = TiktokOrderCommission.objects.exclude(order_id__in=existing_order_ids)
+        orphan_commission_count = orphan_commissions.count()
+        if orphan_commission_count > 0:
+            orphan_commissions.delete()
+        
+        # 调用父类的导入方法
+        response = super().import_data(request)
+        
+        # 如果有清理过数据，在返回信息中添加提示
+        if orphan_item_count > 0 or orphan_influencer_count > 0 or orphan_commission_count > 0:
+            original_msg = response.data.get('msg', '')
+            response.data['msg'] = f"{original_msg}（已清理孤立关联数据：订单项{orphan_item_count}条，达人信息{orphan_influencer_count}条，佣金信息{orphan_commission_count}条）"
+        
+        return response
+
+    @action(methods=["POST"], detail=False)
+    def batch_delete(self, request):
+        """
+        批量删除TikTok订单
+        
+        请求参数:
+        - ids: 订单ID数组
+        
+        返回:
+        - success: 是否成功
+        - message: 提示信息
+        """
+        ids = request.data.get('ids', [])
+        
+        if not ids:
+            return Response(
+                {'success': False, 'message': '请选择要删除的订单'},
+                status=status.HTTP_BAD_REQUEST
+            )
+        
+        try:
+            # 删除关联数据
+            TiktokOrderItem.objects.filter(order_id__in=ids).delete()
+            TiktokOrderInfluencer.objects.filter(order_id__in=ids).delete()
+            TiktokOrderCommission.objects.filter(order_id__in=ids).delete()
+            # 删除主订单
+            TiktokOrder.objects.filter(id__in=ids).delete()
+            
+            return SuccessResponse(msg=f"成功删除{len(ids)}条订单")
+        
+        except Exception as e:
+            return Response(
+                {'success': False, 'message': f'批量删除失败: {str(e)}'},
+                status=status.HTTP_INTERNAL_SERVER_ERROR
+            )
 
     @action(methods=["POST"], detail=False)
     def sync(self, request):
@@ -568,6 +706,36 @@ class ShangmaOrderViewSet(CustomModelViewSet):
         "shipping_difference": "运费差额",
     }
 
+    @action(methods=["POST"], detail=False)
+    def batch_delete(self, request):
+        """
+        批量删除上马订单
+        
+        请求参数:
+        - ids: 订单ID数组
+        
+        返回:
+        - success: 是否成功
+        - message: 提示信息
+        """
+        ids = request.data.get('ids', [])
+        
+        if not ids:
+            return Response(
+                {'success': False, 'message': '请选择要删除的订单'},
+                status=status.HTTP_BAD_REQUEST
+            )
+        
+        try:
+            ShangmaOrder.objects.filter(id__in=ids).delete()
+            return SuccessResponse(msg=f"成功删除{len(ids)}条订单")
+        
+        except Exception as e:
+            return Response(
+                {'success': False, 'message': f'批量删除失败: {str(e)}'},
+                status=status.HTTP_INTERNAL_SERVER_ERROR
+            )
+
 
 class OrderStatisticsViewSet(viewsets.ViewSet):
     """
@@ -727,7 +895,6 @@ class TiktokOAuthViewSet(viewsets.ViewSet):
         - refresh_token: 刷新令牌
         - shop_id: 店铺ID
         - shop_cipher: 跨境店需要的 shop_cipher
-        - shops: 店铺列表
         - message: 提示信息
         
         使用示例:
@@ -750,41 +917,14 @@ class TiktokOAuthViewSet(viewsets.ViewSet):
             
             if result.get('code') == 0:
                 data = result.get('data', {})
-                access_token = data.get('access_token')
-                refresh_token = data.get('refresh_token')
-                shop_id_from_token = data.get('shop_id')
-                shop_cipher_from_token = data.get('shop_cipher')
-                
-                # 获取店铺信息（推荐方式）
-                shops_result = client.get_authorized_shops(access_token)
-                shops = []
-                shop_id = shop_id_from_token
-                shop_cipher = shop_cipher_from_token
-                
-                if shops_result.get('code') == 0:
-                    shops_data = shops_result.get('data', {})
-                    shops = shops_data.get('shops', [])
-                    
-                    if shops:
-                        first_shop = shops[0]
-                        shop_id = first_shop.get('shop_id') or shop_id_from_token
-                        shop_cipher = first_shop.get('shop_cipher') or shop_cipher_from_token
-                
-                # 检查是否有可用店铺
-                if not shop_id or (not shops and not shop_id_from_token):
-                    return Response(
-                        {'success': False, 'message': '没有可用的店铺，请先在TikTok开放平台绑定店铺'},
-                        status=status.HTTP_BAD_REQUEST
-                    )
                 
                 return SuccessResponse(data={
                     'success': True,
-                    'access_token': access_token,
-                    'refresh_token': refresh_token,
+                    'access_token': data.get('access_token'),
+                    'refresh_token': data.get('refresh_token'),
                     'expires_in': data.get('expires_in'),
-                    'shop_id': shop_id,
-                    'shop_cipher': shop_cipher,
-                    'shops': shops,
+                    'shop_id': data.get('shop_id'),
+                    'shop_cipher': data.get('shop_cipher'),
                     'message': '授权成功'
                 })
             else:

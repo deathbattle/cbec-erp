@@ -10,6 +10,8 @@ import {
 } from '@fast-crud/fast-crud';
 import { auth } from '/@/utils/authFunction';
 import { commonCrudConfig } from "/@/utils/commonCrud";
+import { successMessage } from '/@/utils/message';
+import { ElMessageBox } from 'element-plus';
 
 export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProps): CreateCrudOptionsRet {
     const pageRequest = async (query: UserPageQuery) => {
@@ -29,6 +31,12 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
 
     const exportRequest = async (query: UserPageQuery) => {
         return await api.exportData(query)
+    }
+
+    const batchDeleteRequest = async (ids: number[]) => {
+        const result = await api.BatchDelObj(ids)
+        successMessage(result.msg as string)
+        crudExpose!.doRefresh()
     }
 
     return {
@@ -52,16 +60,30 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
             //     }
             // },
             table: {
+                selection: {
+                    multiple: true,
+                    crossPage: true,
+                },
                 remove: {
                     confirmMessage: '是否删除该订单？',
                 },
-                onRefreshed: {
-                    // 列表刷新回调
+                on: {
+                    onRefreshed: (context: any) => {
+                        console.log('表格刷新完成');
+                        console.log('当前页数据:', context.data);
+                        console.log('分页信息:', context.pagination);
+                    },
                     querySuccess: (data: any) => {
-                        debugger
-                        console.log('列表刷新回调', data);
+                        console.log('查询成功', data);
+                    },
+                    queryError: (error: any) => {
+                        console.log('查询失败', error);
                     },
                 },
+            },
+            pagination: {
+                show: true,
+                pageSizes: [10, 20, 50, 100, 200, 500],
             },
             actionbar: {
                 buttons: {
@@ -76,14 +98,35 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                             return exportRequest(crudExpose!.getSearchFormData())
                         }
                     },
-                    clear: {
-                        text: "清空筛选",
-                        title: "清空筛选",
-                        show: true,
+                    batchRemove: {
+                        text: "批量删除",
+                        title: "批量删除",
+                        show: auth('tiktok_order:Delete'),
                         click() {
-                            crudExpose!.doSearch({ form: {} })
+                            const tableRef = crudExpose!.getBaseTableRef()
+                            const selectedRows = tableRef?.getSelectionRows?.() || []
+                            if (selectedRows.length === 0) {
+                                successMessage('请先选择要删除的订单')
+                                return
+                            }
+                            const ids = selectedRows.map((row: any) => row.id)
+                            ElMessageBox.confirm(`确认删除选中的 ${ids.length} 条订单？`, '温馨提示', {
+                                confirmButtonText: '确认',
+                                cancelButtonText: '取消',
+                                type: 'warning',
+                            }).then(() => {
+                                batchDeleteRequest(ids)
+                            })
                         }
-                    }
+                    },
+                    // clear: {
+                    //     text: "清空筛选",
+                    //     title: "清空筛选",
+                    //     show: true,
+                    //     click() {
+                    //         crudExpose!.doSearch({ form: {} })
+                    //     }
+                    // }
                 }
             },
             rowHandle: {
@@ -106,6 +149,17 @@ export const createCrudOptions = function ({ crudExpose }: CreateCrudOptionsProp
                 },
             },
             columns: {
+                $checked: {
+                    form: { show: false },
+                    column: {
+                        type: 'selection',
+                        align: 'center',
+                        width: '55px',
+                        order: -9999,
+                        reserveSelection: true,
+                        columnSetDisabled: true,
+                    },
+                },
                 _index: {
                     title: '序号',
                     form: { show: false },

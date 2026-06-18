@@ -145,14 +145,60 @@ class ImportSerializerMixin:
             ]
             import_field_dict = {'id':'更新主键(勿改)',**self.import_field_dict}
             data = import_to_data(request.data.get("url"), import_field_dict, m2m_fields)
+            
+            if not data:
+                return DetailResponse(msg=f"导入成功！")
+            
+            # 获取模型的唯一标识字段（除了id），用于匹配已存在的记录
+            unique_fields = []
+            for field in queryset.model._meta.get_fields():
+                if hasattr(field, 'unique') and field.unique and field.name != 'id':
+                    unique_fields.append(field.name)
+            
+            # 批量查询已存在的记录，避免循环中的N+1查询
+            existing_instances = {}
+            
+            # 按 id 查询
+            existing_ids = [ele.get('id') for ele in data if ele.get('id')]
+            if existing_ids:
+                for instance in queryset.filter(id__in=existing_ids):
+                    existing_instances[f"id_{instance.id}"] = instance
+            
+            # 按唯一标识字段查询
+            for unique_field in unique_fields:
+                unique_values = [ele.get(unique_field) for ele in data if ele.get(unique_field)]
+                if unique_values:
+                    for instance in queryset.filter(**{f"{unique_field}__in": unique_values}):
+                        existing_instances[f"{unique_field}_{getattr(instance, unique_field)}"] = instance
+            
+            # 使用序列化器验证和保存，但复用已查询的实例
+            total_created = 0
+            total_updated = 0
+            
             for ele in data:
-                filter_dic = {'id':ele.get('id')}
-                instance = filter_dic and queryset.filter(**filter_dic).first()
-                # print(156,ele)
+                # 优先按 id 匹配
+                instance = None
+                instance_id = ele.get('id')
+                if instance_id and f"id_{instance_id}" in existing_instances:
+                    instance = existing_instances[f"id_{instance_id}"]
+                else:
+                    # 按唯一标识字段匹配
+                    for unique_field in unique_fields:
+                        unique_value = ele.get(unique_field)
+                        if unique_value and f"{unique_field}_{unique_value}" in existing_instances:
+                            instance = existing_instances[f"{unique_field}_{unique_value}"]
+                            break
+                
                 serializer = self.import_serializer_class(instance, data=ele, request=request)
                 serializer.is_valid(raise_exception=True)
                 serializer.save()
-            return DetailResponse(msg=f"导入成功！")
+                
+                if instance:
+                    total_updated += 1
+                else:
+                    total_created += 1
+            
+            return DetailResponse(msg=f"导入成功！共新增 {total_created} 条记录，更新 {total_updated} 条记录")
 
     @action(methods=['get'],detail=False)
     def update_template(self,request):

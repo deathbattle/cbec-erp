@@ -42,10 +42,47 @@ export function DelObj(id: DelReq) {
     });
 }
 
+export function BatchDelObj(ids: number[]) {
+    return request({
+        url: apiPrefix + 'batch_delete/',
+        method: 'post',
+        data: { ids },
+    });
+}
+
 export function exportData(params: any) {
     return downloadFile({
         url: apiPrefix + 'export_data/',
         params: params,
         method: 'get'
     })
+}
+
+/**
+ * 同步TikTok订单
+ * @param params - 同步参数
+ * @param params.days - 同步最近N天的数据（默认7天）
+ * @param params.start_time - 开始时间
+ * @param params.end_time - 结束时间
+ */
+export function syncOrders(params?: {
+    days?: number;
+    start_time?: string;
+    end_time?: string;
+}) {
+    return request({
+        url: apiPrefix + 'sync/',
+        method: 'post',
+        data: params || {},
+    });
+}
+
+/**
+ * 获取同步状态
+ */
+export function getSyncStatus() {
+    return request({
+        url: apiPrefix + 'sync_status/',
+        method: 'get',
+    });
 }

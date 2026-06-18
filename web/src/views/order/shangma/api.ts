@@ -42,6 +42,14 @@ export function DelObj(id: DelReq) {
     });
 }
 
+export function BatchDelObj(ids: number[]) {
+    return request({
+        url: apiPrefix + 'batch_delete/',
+        method: 'post',
+        data: { ids },
+    });
+}
+
 export function exportData(params: any) {
     return downloadFile({
         url: apiPrefix + 'export_data/',
